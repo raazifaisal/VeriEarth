@@ -16,7 +16,6 @@ class UserOut(BaseModel):
     id: str
     email: EmailStr
     full_name: Optional[str]
-    is_active: bool
     is_verified: bool
 
 class Token(BaseModel):

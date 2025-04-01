@@ -11,7 +11,6 @@ class User(Base):
     email = Column(String, unique=True, nullable=False)
     hashed_password = Column(String, nullable=True)
     full_name = Column(String, nullable=True)
-    is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
     oauth_provider = Column(String, nullable=True)
     oauth_id = Column(String, nullable=True, unique=True)

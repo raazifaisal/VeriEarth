@@ -1,12 +1,13 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
-
+import uvicorn
 import auth.auth
 from db.database import SessionLocal, engine
 import db.models, db.schemas, db.crud
 import auth
 from routes import auth_routes, report_routes
 
+# Create database tables
 db.models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -22,31 +23,14 @@ def get_db():
     finally:
         db.close()
 
-@app.post("/register", response_model=db.schemas.UserOut)
-def register(user: db.schemas.UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.crud.get_user_by_email(db, user.email)
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
 
-    created_user = db.crud.create_user(db, user)
-    return created_user
 
-@app.post("/login", response_model=db.schemas.Token)
-def login(email: str, password: str, db: Session = Depends(get_db)):
-    user = auth.authenticate_user(db, email, password)
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    access_token = auth.create_access_token(data={"sub": user.email})
-    return {"access_token": access_token, "token_type": "bearer"}
-
-@app.get("/auth/google")
-def google_oauth_redirect():
-    return {"url": auth.get_google_oauth_url()}
-
-@app.get("/auth/google/callback")
-async def google_oauth_callback(code: str, db: Session = Depends(get_db)):
-    google_user_info = await auth.auth.fetch_google_user_info(code)
-    user = auth.auth.register_or_login_google_user(db, google_user_info)
-    access_token = auth.auth.create_access_token(data={"sub": user.email})
-    return {"access_token": access_token, "token_type": "bearer"}
+if __name__ == "__main__":
+    
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,  # Enable auto-reload during development
+        workers=1     # Number of worker processes
+    )

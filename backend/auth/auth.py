@@ -13,8 +13,8 @@ from fastapi.security import OAuth2PasswordBearer
 from typing import Optional
 import httpx
 
-from db.crud import get_user_by_email, create_social_user
-from db.schemas import UserOAuthCreate
+from db.crud import create_regular_user, get_user_by_email, create_social_user
+from db.schemas import UserCreate, UserOAuthCreate
 from db.models import User
 from db.database import get_db
 
@@ -109,6 +109,8 @@ def register_or_login_google_user(db: Session, google_user_info: dict) -> User:
         raise HTTPException(status_code=400, detail="Email already registered with another method.")
 
     return user
+
+
 
 # --- EMAIL VERIFICATION ---
 def generate_verification_token() -> str:
@@ -205,3 +207,4 @@ def decode_token(token: str, expected_type: Optional[str] = None) -> dict:
         return payload
     except PyJWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+

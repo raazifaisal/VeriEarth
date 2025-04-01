@@ -19,24 +19,31 @@ from db.crud import get_user_by_email, get_user_by_verification_token, create_re
 from jwt import PyJWKError
 
 router = APIRouter()
-
 @router.post("/register")
 async def register(user_data: UserCreate, db: Session = Depends(get_db)):
     existing_user = get_user_by_email(db, user_data.email)
+
     if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        if existing_user.is_verified:
+            raise HTTPException(
+                status_code=400,
+                detail="Email already registered. Please log in."
+            )
+        else:
+            # Resend verification email if user exists but is not verified
+            await send_verification_email(existing_user.email, existing_user.verification_token)
+            return {"msg": "Email already registered but not verified. A new verification email has been sent."}
 
+    # Create a new user
     user = create_regular_user(db, user_data, generate_verification_token=generate_verification_token)
-
-    # Generate and set verification token
-    verification_token = generate_verification_token()
-    user.verification_token = verification_token
     db.commit()
+    db.refresh(user)
 
     # Send verification email
-    await send_verification_email(user.email, verification_token)
-
+    await send_verification_email(user.email, user.verification_token)
+    
     return {"msg": "Please check your email to verify your account"}
+
 
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -44,7 +51,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
     if not user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect email or password")
-    if not user.is_active:
+    if not user.is_verified:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User account not verified")
 
     access_token = create_access_token({"sub": user.email})
@@ -60,7 +67,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 def google_login():
     return {"url": get_google_oauth_url()}
 
-@router.get("/google/callback")
+@router.get("/auth/google/callback")
 async def google_callback(code: str, db: Session = Depends(get_db)):
     google_user_info = await fetch_google_user_info(code)
     user = register_or_login_google_user(db, google_user_info)
@@ -81,7 +88,7 @@ def verify_email(token: str, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=400, detail="Invalid verification token")
 
-    user.is_active = True
+    user.is_verified = True
     user.verification_token = None
     db.commit()
 
