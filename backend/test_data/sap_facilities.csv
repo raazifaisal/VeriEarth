@@ -1,0 +1,37 @@
+WERKS,NAME1,NAME2,ORT01,REGIO,LAND1,PSTLZ,LATITUDE,LONGITUDE
+1000,Spice Kitchen Central Kitchen,Mumbai Central,Mumbai,Maharashtra,IN,400001,19.0760,72.8777
+2000,Spice Kitchen Distribution Hub,Delhi Distribution,New Delhi,Delhi,IN,110001,28.6139,77.2090
+3000,Spice Kitchen Regional Kitchen,Bangalore Kitchen,Bangalore,Karnataka,IN,560001,12.9716,77.5946
+4000,Spice Kitchen Cold Storage,Chennai Cold Storage,Chennai,Tamil Nadu,IN,600001,13.0827,80.2707
+5000,Spice Kitchen Packaging Unit,Hyderabad Packaging,Hyderabad,Telangana,IN,500001,17.3850,78.4867
+6000,Spice Kitchen Regional Kitchen,Pune Kitchen,Pune,Maharashtra,IN,411001,18.5204,73.8567
+7000,Spice Kitchen Distribution Hub,Ahmedabad Hub,Ahmedabad,Gujarat,IN,380001,23.0225,72.5714
+8000,Spice Kitchen Regional Kitchen,Kolkata Kitchen,Kolkata,West Bengal,IN,700001,22.5726,88.3639
+9000,Spice Kitchen Cold Storage,Jaipur Cold Storage,Jaipur,Rajasthan,IN,302001,26.9124,75.7873
+1001,Spice Kitchen Restaurant Mumbai 1,Mumbai Outlet 1,Mumbai,Maharashtra,IN,400002,19.0760,72.8777
+1002,Spice Kitchen Restaurant Mumbai 2,Mumbai Outlet 2,Mumbai,Maharashtra,IN,400003,19.0760,72.8777
+1003,Spice Kitchen Restaurant Mumbai 3,Mumbai Outlet 3,Mumbai,Maharashtra,IN,400004,19.0760,72.8777
+2001,Spice Kitchen Restaurant Delhi 1,Delhi Outlet 1,New Delhi,Delhi,IN,110002,28.6139,77.2090
+2002,Spice Kitchen Restaurant Delhi 2,Delhi Outlet 2,New Delhi,Delhi,IN,110003,28.6139,77.2090
+2003,Spice Kitchen Restaurant Delhi 3,Delhi Outlet 3,New Delhi,Delhi,IN,110004,28.6139,77.2090
+3001,Spice Kitchen Restaurant Bangalore 1,Bangalore Outlet 1,Bangalore,Karnataka,IN,560002,12.9716,77.5946
+3002,Spice Kitchen Restaurant Bangalore 2,Bangalore Outlet 2,Bangalore,Karnataka,IN,560003,12.9716,77.5946
+3003,Spice Kitchen Restaurant Bangalore 3,Bangalore Outlet 3,Bangalore,Karnataka,IN,560004,12.9716,77.5946
+4001,Spice Kitchen Restaurant Chennai 1,Chennai Outlet 1,Chennai,Tamil Nadu,IN,600002,13.0827,80.2707
+4002,Spice Kitchen Restaurant Chennai 2,Chennai Outlet 2,Chennai,Tamil Nadu,IN,600003,13.0827,80.2707
+4003,Spice Kitchen Restaurant Chennai 3,Chennai Outlet 3,Chennai,Tamil Nadu,IN,600004,13.0827,80.2707
+5001,Spice Kitchen Restaurant Hyderabad 1,Hyderabad Outlet 1,Hyderabad,Telangana,IN,500002,17.3850,78.4867
+5002,Spice Kitchen Restaurant Hyderabad 2,Hyderabad Outlet 2,Hyderabad,Telangana,IN,500003,17.3850,78.4867
+5003,Spice Kitchen Restaurant Hyderabad 3,Hyderabad Outlet 3,Hyderabad,Telangana,IN,500004,17.3850,78.4867
+6001,Spice Kitchen Restaurant Pune 1,Pune Outlet 1,Pune,Maharashtra,IN,411002,18.5204,73.8567
+6002,Spice Kitchen Restaurant Pune 2,Pune Outlet 2,Pune,Maharashtra,IN,411003,18.5204,73.8567
+6003,Spice Kitchen Restaurant Pune 3,Pune Outlet 3,Pune,Maharashtra,IN,411004,18.5204,73.8567
+7001,Spice Kitchen Restaurant Ahmedabad 1,Ahmedabad Outlet 1,Ahmedabad,Gujarat,IN,380002,23.0225,72.5714
+7002,Spice Kitchen Restaurant Ahmedabad 2,Ahmedabad Outlet 2,Ahmedabad,Gujarat,IN,380003,23.0225,72.5714
+7003,Spice Kitchen Restaurant Ahmedabad 3,Ahmedabad Outlet 3,Ahmedabad,Gujarat,IN,380004,23.0225,72.5714
+8001,Spice Kitchen Restaurant Kolkata 1,Kolkata Outlet 1,Kolkata,West Bengal,IN,700002,22.5726,88.3639
+8002,Spice Kitchen Restaurant Kolkata 2,Kolkata Outlet 2,Kolkata,West Bengal,IN,700003,22.5726,88.3639
+8003,Spice Kitchen Restaurant Kolkata 3,Kolkata Outlet 3,Kolkata,West Bengal,IN,700004,22.5726,88.3639
+9001,Spice Kitchen Restaurant Jaipur 1,Jaipur Outlet 1,Jaipur,Rajasthan,IN,302002,26.9124,75.7873
+9002,Spice Kitchen Restaurant Jaipur 2,Jaipur Outlet 2,Jaipur,Rajasthan,IN,302003,26.9124,75.7873
+9003,Spice Kitchen Restaurant Jaipur 3,Jaipur Outlet 3,Jaipur,Rajasthan,IN,302004,26.9124,75.7873

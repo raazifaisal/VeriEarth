@@ -16,6 +16,7 @@ class SupplyChainService:
     def create_facility(self, payload: FacilityCreate) -> Facility:
         try:
             pg_facility = Facility(
+                organization_id=self.organization_id,
                 name=payload.name,
                 facility_type=payload.facility_type.value,
                 location=f'POINT({payload.longitude} {payload.latitude})',

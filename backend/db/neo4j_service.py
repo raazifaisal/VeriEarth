@@ -98,4 +98,60 @@ class Neo4jService:
             )
             return [r.data() for r in result]
 
+    def create_environmental_snapshot(self, facility_id: str, eo_data: dict):
+        """Store EO data as graph node linked to facility"""
+        import uuid
+        
+        query = '''
+        MATCH (f:Facility {id: $facility_id})
+        CREATE (e:EnvironmentalSnapshot {
+            id: $snapshot_id,
+            facility_id: $facility_id,
+            captured_at: datetime($captured_at),
+            NO2: $no2,
+            CO: $co,
+            CH4: $ch4,
+            SO2: $so2,
+            AOD: $aod,
+            O3: $o3,
+            aqi_score: $aqi_score,
+            pollution_level: $pollution_level
+        })
+        CREATE (f)-[:HAS_ENVIRONMENTAL_DATA {captured_at: datetime($captured_at)}]->(e)
+        RETURN e.id AS id
+        '''
+        
+        with self._session() as session:
+            result = session.run(query,
+                snapshot_id=str(uuid.uuid4()),
+                facility_id=facility_id,
+                captured_at=datetime.now().isoformat(),
+                no2=eo_data.get("no2_avg"),
+                co=eo_data.get("co_avg"),
+                ch4=eo_data.get("ch4_avg"),
+                so2=eo_data.get("so2_avg"),
+                aod=eo_data.get("aod_avg"),
+                o3=eo_data.get("o3_avg"),
+                aqi_score=eo_data.get("aqi_score"),
+                pollution_level=eo_data.get("pollution_level")
+            )
+            record = result.single()
+            return record["id"] if record else None
+    
+    def find_high_pollution_facilities(self, org_id: str, threshold: float = 100):
+        """Query facilities in high-pollution areas"""
+        query = '''
+        MATCH (f:Facility {organization_id: $org_id})-[:HAS_ENVIRONMENTAL_DATA]->(e:EnvironmentalSnapshot)
+        WHERE e.aqi_score > $threshold
+        WITH f, e
+        ORDER BY e.captured_at DESC
+        RETURN f.id AS facility_id, f.name AS facility_name, 
+               e.aqi_score AS aqi_score, e.pollution_level AS pollution_level
+        LIMIT 50
+        '''
+        
+        with self._session() as session:
+            result = session.run(query, org_id=org_id, threshold=threshold)
+            return [r.data() for r in result]
+
 

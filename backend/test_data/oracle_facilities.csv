@@ -1,0 +1,38 @@
+LOCATION_CODE,LOCATION_NAME,CITY,STATE,COUNTRY,POSTAL_CODE,LATITUDE,LONGITUDE
+LOC001,Spice Kitchen Central Kitchen,Mumbai,Maharashtra,India,400001,19.0760,72.8777
+LOC002,Spice Kitchen Distribution Hub,New Delhi,Delhi,India,110001,28.6139,77.2090
+LOC003,Spice Kitchen Regional Kitchen,Bangalore,Karnataka,India,560001,12.9716,77.5946
+LOC004,Spice Kitchen Cold Storage,Chennai,Tamil Nadu,India,600001,13.0827,80.2707
+LOC005,Spice Kitchen Packaging Unit,Hyderabad,Telangana,India,500001,17.3850,78.4867
+LOC006,Spice Kitchen Regional Kitchen,Pune,Maharashtra,India,411001,18.5204,73.8567
+LOC007,Spice Kitchen Distribution Hub,Ahmedabad,Gujarat,India,380001,23.0225,72.5714
+LOC008,Spice Kitchen Regional Kitchen,Kolkata,West Bengal,India,700001,22.5726,88.3639
+LOC009,Spice Kitchen Cold Storage,Jaipur,Rajasthan,India,302001,26.9124,75.7873
+LOC010,Spice Kitchen Central Kitchen,Mumbai,Maharashtra,India,400001,19.0760,72.8777
+LOC011,Spice Kitchen Restaurant Mumbai 1,Mumbai,Maharashtra,India,400002,19.0760,72.8777
+LOC012,Spice Kitchen Restaurant Mumbai 2,Mumbai,Maharashtra,India,400003,19.0760,72.8777
+LOC013,Spice Kitchen Restaurant Mumbai 3,Mumbai,Maharashtra,India,400004,19.0760,72.8777
+LOC014,Spice Kitchen Restaurant Delhi 1,New Delhi,Delhi,India,110002,28.6139,77.2090
+LOC015,Spice Kitchen Restaurant Delhi 2,New Delhi,Delhi,India,110003,28.6139,77.2090
+LOC016,Spice Kitchen Restaurant Delhi 3,New Delhi,Delhi,India,110004,28.6139,77.2090
+LOC017,Spice Kitchen Restaurant Bangalore 1,Bangalore,Karnataka,India,560002,12.9716,77.5946
+LOC018,Spice Kitchen Restaurant Bangalore 2,Bangalore,Karnataka,India,560003,12.9716,77.5946
+LOC019,Spice Kitchen Restaurant Bangalore 3,Bangalore,Karnataka,India,560004,12.9716,77.5946
+LOC020,Spice Kitchen Restaurant Chennai 1,Chennai,Tamil Nadu,India,600002,13.0827,80.2707
+LOC021,Spice Kitchen Restaurant Chennai 2,Chennai,Tamil Nadu,India,600003,13.0827,80.2707
+LOC022,Spice Kitchen Restaurant Chennai 3,Chennai,Tamil Nadu,India,600004,13.0827,80.2707
+LOC023,Spice Kitchen Restaurant Hyderabad 1,Hyderabad,Telangana,India,500002,17.3850,78.4867
+LOC024,Spice Kitchen Restaurant Hyderabad 2,Hyderabad,Telangana,India,500003,17.3850,78.4867
+LOC025,Spice Kitchen Restaurant Hyderabad 3,Hyderabad,Telangana,India,500004,17.3850,78.4867
+LOC026,Spice Kitchen Restaurant Pune 1,Pune,Maharashtra,India,411002,18.5204,73.8567
+LOC027,Spice Kitchen Restaurant Pune 2,Pune,Maharashtra,India,411003,18.5204,73.8567
+LOC028,Spice Kitchen Restaurant Pune 3,Pune,Maharashtra,India,411004,18.5204,73.8567
+LOC029,Spice Kitchen Restaurant Ahmedabad 1,Ahmedabad,Gujarat,India,380002,23.0225,72.5714
+LOC030,Spice Kitchen Restaurant Ahmedabad 2,Ahmedabad,Gujarat,India,380003,23.0225,72.5714
+LOC031,Spice Kitchen Restaurant Ahmedabad 3,Ahmedabad,Gujarat,India,380004,23.0225,72.5714
+LOC032,Spice Kitchen Restaurant Kolkata 1,Kolkata,West Bengal,India,700002,22.5726,88.3639
+LOC033,Spice Kitchen Restaurant Kolkata 2,Kolkata,West Bengal,India,700003,22.5726,88.3639
+LOC034,Spice Kitchen Restaurant Kolkata 3,Kolkata,West Bengal,India,700004,22.5726,88.3639
+LOC035,Spice Kitchen Restaurant Jaipur 1,Jaipur,Rajasthan,India,302002,26.9124,75.7873
+LOC036,Spice Kitchen Restaurant Jaipur 2,Jaipur,Rajasthan,India,302003,26.9124,75.7873
+LOC037,Spice Kitchen Restaurant Jaipur 3,Jaipur,Rajasthan,India,302004,26.9124,75.7873

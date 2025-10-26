@@ -85,6 +85,7 @@ class Facility(Base):
     __tablename__ = 'facilities'
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    organization_id = Column(String, ForeignKey('organizations.id'), nullable=False)  # For multi-tenancy
     name = Column(String, nullable=False)
     facility_type = Column(SAEnum(FacilityType), nullable=False)
     location = Column(Geometry('POINT', srid=4326))
@@ -170,3 +171,26 @@ class Shipment(Base):
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class FacilityEnvironmentalData(Base):
+    __tablename__ = 'facility_environmental_data'
+    
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    facility_id = Column(String, ForeignKey('facilities.id'), nullable=False)
+    organization_id = Column(String, ForeignKey('organizations.id'))  # For isolation
+    captured_at = Column(DateTime, nullable=False)
+    
+    # Pollutant measurements (averages from EO data)
+    no2_value = Column(Float)
+    co_value = Column(Float)
+    ch4_value = Column(Float)
+    so2_value = Column(Float)
+    aod_value = Column(Float)
+    o3_value = Column(Float)
+    
+    # Derived metrics
+    aqi_score = Column(Float)
+    pollution_level = Column(String)  # good, moderate, unhealthy_sensitive, unhealthy, hazardous
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -1,0 +1,38 @@
+FACILITY_ID,FACILITY_NAME,CITY,STATE,COUNTRY,POSTAL_CODE,LATITUDE,LONGITUDE
+FAC001,Spice Kitchen Central Kitchen,Mumbai,Maharashtra,India,400001,19.0760,72.8777
+FAC002,Spice Kitchen Distribution Hub,New Delhi,Delhi,India,110001,28.6139,77.2090
+FAC003,Spice Kitchen Regional Kitchen,Bangalore,Karnataka,India,560001,12.9716,77.5946
+FAC004,Spice Kitchen Cold Storage,Chennai,Tamil Nadu,India,600001,13.0827,80.2707
+FAC005,Spice Kitchen Packaging Unit,Hyderabad,Telangana,India,500001,17.3850,78.4867
+FAC006,Spice Kitchen Regional Kitchen,Pune,Maharashtra,India,411001,18.5204,73.8567
+FAC007,Spice Kitchen Distribution Hub,Ahmedabad,Gujarat,India,380001,23.0225,72.5714
+FAC008,Spice Kitchen Regional Kitchen,Kolkata,West Bengal,India,700001,22.5726,88.3639
+FAC009,Spice Kitchen Cold Storage,Jaipur,Rajasthan,India,302001,26.9124,75.7873
+FAC010,Spice Kitchen Central Kitchen,Mumbai,Maharashtra,India,400001,19.0760,72.8777
+FAC011,Spice Kitchen Restaurant Mumbai 1,Mumbai,Maharashtra,India,400002,19.0760,72.8777
+FAC012,Spice Kitchen Restaurant Mumbai 2,Mumbai,Maharashtra,India,400003,19.0760,72.8777
+FAC013,Spice Kitchen Restaurant Mumbai 3,Mumbai,Maharashtra,India,400004,19.0760,72.8777
+FAC014,Spice Kitchen Restaurant Delhi 1,New Delhi,Delhi,India,110002,28.6139,77.2090
+FAC015,Spice Kitchen Restaurant Delhi 2,New Delhi,Delhi,India,110003,28.6139,77.2090
+FAC016,Spice Kitchen Restaurant Delhi 3,New Delhi,Delhi,India,110004,28.6139,77.2090
+FAC017,Spice Kitchen Restaurant Bangalore 1,Bangalore,Karnataka,India,560002,12.9716,77.5946
+FAC018,Spice Kitchen Restaurant Bangalore 2,Bangalore,Karnataka,India,560003,12.9716,77.5946
+FAC019,Spice Kitchen Restaurant Bangalore 3,Bangalore,Karnataka,India,560004,12.9716,77.5946
+FAC020,Spice Kitchen Restaurant Chennai 1,Chennai,Tamil Nadu,India,600002,13.0827,80.2707
+FAC021,Spice Kitchen Restaurant Chennai 2,Chennai,Tamil Nadu,India,600003,13.0827,80.2707
+FAC022,Spice Kitchen Restaurant Chennai 3,Chennai,Tamil Nadu,India,600004,13.0827,80.2707
+FAC023,Spice Kitchen Restaurant Hyderabad 1,Hyderabad,Telangana,India,500002,17.3850,78.4867
+FAC024,Spice Kitchen Restaurant Hyderabad 2,Hyderabad,Telangana,India,500003,17.3850,78.4867
+FAC025,Spice Kitchen Restaurant Hyderabad 3,Hyderabad,Telangana,India,500004,17.3850,78.4867
+FAC026,Spice Kitchen Restaurant Pune 1,Pune,Maharashtra,India,411002,18.5204,73.8567
+FAC027,Spice Kitchen Restaurant Pune 2,Pune,Maharashtra,India,411003,18.5204,73.8567
+FAC028,Spice Kitchen Restaurant Pune 3,Pune,Maharashtra,India,411004,18.5204,73.8567
+FAC029,Spice Kitchen Restaurant Ahmedabad 1,Ahmedabad,Gujarat,India,380002,23.0225,72.5714
+FAC030,Spice Kitchen Restaurant Ahmedabad 2,Ahmedabad,Gujarat,India,380003,23.0225,72.5714
+FAC031,Spice Kitchen Restaurant Ahmedabad 3,Ahmedabad,Gujarat,India,380004,23.0225,72.5714
+FAC032,Spice Kitchen Restaurant Kolkata 1,Kolkata,West Bengal,India,700002,22.5726,88.3639
+FAC033,Spice Kitchen Restaurant Kolkata 2,Kolkata,West Bengal,India,700003,22.5726,88.3639
+FAC034,Spice Kitchen Restaurant Kolkata 3,Kolkata,West Bengal,India,700004,22.5726,88.3639
+FAC035,Spice Kitchen Restaurant Jaipur 1,Jaipur,Rajasthan,India,302002,26.9124,75.7873
+FAC036,Spice Kitchen Restaurant Jaipur 2,Jaipur,Rajasthan,India,302003,26.9124,75.7873
+FAC037,Spice Kitchen Restaurant Jaipur 3,Jaipur,Rajasthan,India,302004,26.9124,75.7873

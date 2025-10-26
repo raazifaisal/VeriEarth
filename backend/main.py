@@ -6,6 +6,8 @@ from db.database import SessionLocal, engine
 import db.models, db.schemas, db.crud
 import auth
 from routes import auth_routes, report_routes
+from routes import ingestion_routes
+from routes import supply_chain_routes
 
 db.models.Base.metadata.create_all(bind=engine)
 
@@ -14,6 +16,8 @@ app = FastAPI()
 # Include routes
 app.include_router(auth_routes.router, tags=["auth"])
 app.include_router(report_routes.router, prefix="/api/report", tags=["report"])
+app.include_router(ingestion_routes.router)
+app.include_router(supply_chain_routes.router)
 
 def get_db():
     db = SessionLocal()
