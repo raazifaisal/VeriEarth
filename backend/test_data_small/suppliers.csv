@@ -1,0 +1,7 @@
+supplier_id,name,address,city,region,country,postal_code,latitude,longitude,tier_level,certifications,contact_email,contact_phone
+SUP001,ABC Materials Ltd,100 Supplier Street,Mumbai,Maharashtra,India,400002,19.0760,72.8777,tier_1,ISO9001,contact@abcmaterials.com,+91-22-12345678
+SUP002,XYZ Logistics,200 Transport Ave,Delhi,Delhi,India,110002,28.7041,77.1025,tier_2,ISO14001,info@xyzlogistics.com,+91-11-87654321
+SUP003,Global Parts Inc,300 Industrial Zone,Bangalore,Karnataka,India,560002,12.9716,77.5946,tier_1,ISO9001,orders@globalparts.com,+91-80-11223344
+SUP004,Pune Metals Pvt Ltd,55 Foundry Park,Pune,Maharashtra,India,411001,18.5204,73.8567,tier_2,ISO14001,contact@punemetals.com,+91-20-66778899
+SUP005,Hydera Plastics Ltd,88 Polymer Estate,Hyderabad,Telangana,India,500001,17.3850,78.4867,tier_2,ISO9001,sales@hyderaplastics.com,+91-40-99887766
+SUP006,Eastern Electronics Co,22 Tech Enclave,Kolkata,West Bengal,India,700001,22.5726,88.3639,tier_1,ISO14001,info@east-elec.com,+91-33-55667788

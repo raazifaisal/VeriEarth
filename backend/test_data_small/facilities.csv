@@ -1,0 +1,15 @@
+facility_id,name,type,address,city,region,country,postal_code,latitude,longitude,capacity_tons,time_zone,owner_company,supplier_id
+F001,Mumbai Warehouse,warehouse,123 Industrial Area,Mumbai,Maharashtra,India,400001,19.0760,72.8777,1000,IST,VeriEarth Corp,
+F002,Delhi Distribution Center,distribution_center,456 Business Park,Delhi,Delhi,India,110001,28.7041,77.1025,800,IST,VeriEarth Corp,
+F003,Bangalore Factory,manufacturing,789 Tech Hub,Bangalore,Karnataka,India,560001,12.9716,77.5946,1200,IST,VeriEarth Corp,
+F004,Chennai Port,warehouse,321 Port Road,Chennai,Tamil Nadu,India,600001,13.0827,80.2707,2000,IST,VeriEarth Corp,
+F101,ABC Steel Plant,manufacturing,100 Supplier Street,Mumbai,Maharashtra,India,400002,19.0760,72.8777,5000,IST,ABC Materials Ltd,SUP001
+F102,ABC Metal Foundry,manufacturing,101 Foundry Road,Mumbai,Maharashtra,India,400003,19.0860,72.8877,3000,IST,ABC Materials Ltd,SUP001
+F103,XYZ Electronics Factory,manufacturing,200 Transport Ave,Delhi,Delhi,India,110002,28.7041,77.1025,2000,IST,XYZ Logistics,SUP002
+F104,Global Parts Manufacturing,manufacturing,300 Industrial Zone,Bangalore,Karnataka,India,560002,12.9716,77.5946,4000,IST,Global Parts Inc,SUP003
+F005,Pune Warehouse,warehouse,12 Logistics Park,Pune,Maharashtra,India,411001,18.5204,73.8567,900,IST,VeriEarth Corp,
+F006,Hyderabad Distribution Center,distribution_center,77 Cargo Way,Hyderabad,Telangana,India,500001,17.3850,78.4867,1100,IST,VeriEarth Corp,
+F107,Pune Metal Works,manufacturing,55 Foundry Park,Pune,Maharashtra,India,411001,18.5210,73.8572,3500,IST,Pune Metals Pvt Ltd,SUP004
+F108,Hydera Plastics Plant,manufacturing,88 Polymer Estate,Hyderabad,Telangana,India,500001,17.3845,78.4872,2800,IST,Hydera Plastics Ltd,SUP005
+F109,Eastern Electronics Plant,manufacturing,22 Tech Enclave,Kolkata,West Bengal,India,700001,22.5726,88.3639,3000,IST,Eastern Electronics Co,SUP006
+F007,Kolkata Warehouse,warehouse,5 River Port Road,Kolkata,West Bengal,India,700001,22.5720,88.3645,950,IST,VeriEarth Corp,

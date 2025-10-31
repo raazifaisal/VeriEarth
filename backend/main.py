@@ -1,56 +1,77 @@
-from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy.orm import Session
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+import os
 
-import auth.auth
-from db.database import SessionLocal, engine
-import db.models, db.schemas, db.crud
-import auth
-from routes import auth_routes, report_routes
-from routes import ingestion_routes
-from routes import supply_chain_routes
+from db.database import engine
+import db.models
+from routes import auth_routes, report_routes, ingestion_routes, supply_chain_routes, data_management_routes, dashboard_routes, kg_routes, organization_routes
+from routes import kg_analytics_routes
+from middleware.security import SecurityMiddleware, generate_csrf_token
 
+# Create database tables
 db.models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+# Rate limiter
+limiter = Limiter(key_func=get_remote_address)
 
-# Include routes
-app.include_router(auth_routes.router, tags=["auth"])
-app.include_router(report_routes.router, prefix="/api/report", tags=["report"])
-app.include_router(ingestion_routes.router)
-app.include_router(supply_chain_routes.router)
+app = FastAPI(
+    title="VeriEarth API",
+    description="Supply Chain Carbon Intelligence Platform",
+    version="1.0.0"
+)
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# Add rate limiter to app state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-@app.post("/register", response_model=db.schemas.UserOut)
-def register(user: db.schemas.UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.crud.get_user_by_email(db, user.email)
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+# Security middleware (order matters!)
+# Apply CORS first so CORS headers are present even when inner middleware raises errors
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",  # Next.js frontend
+        "http://127.0.0.1:3000",  # Alternative localhost
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-CSRF-Token"],
+)
 
-    created_user = db.crud.create_user(db, user)
-    return created_user
+app.add_middleware(
+    TrustedHostMiddleware, 
+    allowed_hosts=["localhost", "127.0.0.1", "*.localhost"]
+)
 
-@app.post("/login", response_model=db.schemas.Token)
-def login(email: str, password: str, db: Session = Depends(get_db)):
-    user = auth.authenticate_user(db, email, password)
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+# Custom security middleware for CSRF protection
+app.add_middleware(
+    SecurityMiddleware,
+    secret_key=os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
+)
 
-    access_token = auth.create_access_token(data={"sub": user.email})
-    return {"access_token": access_token, "token_type": "bearer"}
+# Include routers
+app.include_router(auth_routes.router, prefix="/auth", tags=["Authentication"])
+app.include_router(report_routes.router, prefix="/api/report", tags=["Reports"])
+app.include_router(ingestion_routes.router, prefix="/api/ingestion", tags=["Data Ingestion"])
+app.include_router(supply_chain_routes.router, prefix="/api", tags=["Supply Chain"])
+app.include_router(data_management_routes.router, prefix="/api/data", tags=["Data Management"])
+app.include_router(dashboard_routes.router, prefix="/api", tags=["Dashboard"])
+app.include_router(kg_routes.router, prefix="/api/kg", tags=["Knowledge Graph"])
+app.include_router(kg_analytics_routes.router, prefix="/api/kg/analytics", tags=["KG Analytics"])
+app.include_router(organization_routes.router, prefix="/api", tags=["Organization"])
 
-@app.get("/auth/google")
-def google_oauth_redirect():
-    return {"url": auth.get_google_oauth_url()}
+@app.get("/")
+def root():
+    return {
+        "message": "VeriEarth API",
+        "version": "1.0.0",
+        "docs": "/docs"
+    }
 
-@app.get("/auth/google/callback")
-async def google_oauth_callback(code: str, db: Session = Depends(get_db)):
-    google_user_info = await auth.auth.fetch_google_user_info(code)
-    user = auth.auth.register_or_login_google_user(db, google_user_info)
-    access_token = auth.auth.create_access_token(data={"sub": user.email})
-    return {"access_token": access_token, "token_type": "bearer"}
+@app.get("/csrf-token")
+def get_csrf_token():
+    """Get CSRF token for frontend"""
+    return {"csrf_token": generate_csrf_token()}

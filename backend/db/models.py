@@ -33,8 +33,12 @@ class Organization(Base):
     name = Column(String, nullable=False)
     schema_name = Column(String, unique=True, nullable=False)
     industry = Column(String)
+    description = Column(Text)
+    address = Column(Text)
+    details = Column(JSON)
     is_active = Column(Boolean, default=True)
     subscription_tier = Column(String)
+    sudo_password_hash = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -86,6 +90,7 @@ class Facility(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     organization_id = Column(String, ForeignKey('organizations.id'), nullable=False)  # For multi-tenancy
+    supplier_id = Column(String, ForeignKey('suppliers.id'), nullable=True)  # If facility is owned by a supplier
     name = Column(String, nullable=False)
     facility_type = Column(SAEnum(FacilityType), nullable=False)
     location = Column(Geometry('POINT', srid=4326))
@@ -104,12 +109,57 @@ class Supplier(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String, nullable=False)
-    location = Column(Geometry('POINT', srid=4326))
+    address = Column(String)
+    city = Column(String)
+    region = Column(String)
     country = Column(String)
-    sustainability_score = Column(Float)
-    certifications = Column(JSON)
-    tier_level = Column(Integer)
+    postal_code = Column(String)
+    latitude = Column(Float)
+    longitude = Column(Float)
+    tier_level = Column(String)  # Changed to String to support "tier_1", "tier_2"
+    certifications = Column(String)  # Added for ESG compliance tracking
+    contact_email = Column(String)
+    contact_phone = Column(String)
+    organization_id = Column(String, ForeignKey('organizations.id'), nullable=False)
     is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class Product(Base):
+    __tablename__ = 'products'
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    name = Column(String, nullable=False)
+    category = Column(String)
+    uom = Column(String, default="EA")  # Unit of Measure
+    weight_kg = Column(Float)
+    volume_m3 = Column(Float)
+    carbon_intensity_per_unit = Column(Float)
+    organization_id = Column(String, ForeignKey('organizations.id'), nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class PurchaseOrder(Base):
+    __tablename__ = 'purchase_orders'
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    po_id = Column(String, nullable=False)
+    po_line_id = Column(String, nullable=False)
+    supplier_id = Column(String, ForeignKey('suppliers.id'))
+    facility_id = Column(String, ForeignKey('facilities.id'))
+    product_id = Column(String, ForeignKey('products.id'))
+    quantity = Column(Float, nullable=False)
+    unit_price = Column(Float, nullable=False)
+    total_cost = Column(Float, nullable=False)
+    order_date = Column(DateTime(timezone=True))
+    expected_delivery_date = Column(DateTime(timezone=True))
+    transport_mode = Column(String)
+    currency = Column(String, default="USD")
+    status = Column(String, default="pending")
+    organization_id = Column(String, ForeignKey('organizations.id'), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -118,6 +168,7 @@ class Route(Base):
     __tablename__ = 'routes'
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    organization_id = Column(String, ForeignKey('organizations.id'), nullable=False)
     origin_facility_id = Column(String, ForeignKey('facilities.id'), nullable=False)
     destination_facility_id = Column(String, ForeignKey('facilities.id'), nullable=False)
     transport_mode = Column(SAEnum(TransportMode), nullable=False)
@@ -148,6 +199,7 @@ class Shipment(Base):
     __tablename__ = 'shipments'
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    organization_id = Column(String, ForeignKey('organizations.id'), nullable=False)
     route_id = Column(String, ForeignKey('routes.id'), nullable=False)
     weight_kg = Column(Float, nullable=False)
     volume_m3 = Column(Float)
@@ -184,6 +236,7 @@ class FacilityEnvironmentalData(Base):
     # Pollutant measurements (averages from EO data)
     no2_value = Column(Float)
     co_value = Column(Float)
+    hcho_value = Column(Float)
     ch4_value = Column(Float)
     so2_value = Column(Float)
     aod_value = Column(Float)

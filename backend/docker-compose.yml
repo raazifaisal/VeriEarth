@@ -13,6 +13,10 @@ services:
       - NEO4J_USER=neo4j
       - NEO4J_PASSWORD=12345678
       - REDIS_URL=redis://redis:6379
+      - GEE_PROJECT_ID=veriearth-468117
+      - GEE_SERVICE_ACCOUNT_KEY_PATH=/app/service-account-key.json
+      - GEE_SERVICE_ACCOUNT_EMAIL=veriearth-containeraccount@veriearth-468117.iam.gserviceaccount.com
+      - JWT_SECRET_KEY=your-secret-key-change-in-production
     depends_on:
       postgres:
         condition: service_healthy
@@ -22,11 +26,12 @@ services:
         condition: service_healthy
     volumes:
       - .:/app
+      - ./veriearth-468117-4511ba47997e.json:/app/service-account-key.json
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
-  # PostgreSQL with PostGIS
+  # PostgreSQL with PostGIS + TimescaleDB (custom build)
   postgres:
-    image: postgis/postgis:17-3.4
+    build: ./db
     platform: linux/arm64
     environment:
       - POSTGRES_DB=veriearth
@@ -36,6 +41,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d veriearth"]
       interval: 10s
@@ -48,9 +54,9 @@ services:
     platform: linux/arm64
     environment:
       - NEO4J_AUTH=neo4j/12345678
-      - NEO4J_PLUGINS=["apoc"]
-      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
-      - NEO4J_dbms_security_procedures_allowlist=apoc.*
+      - NEO4J_PLUGINS=["apoc","graph-data-science"]
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*,gds.*
+      - NEO4J_dbms_security_procedures_allowlist=apoc.*,gds.*
     ports:
       - "7474:7474"  # HTTP
       - "7687:7687"  # Bolt

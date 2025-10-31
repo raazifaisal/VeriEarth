@@ -15,6 +15,20 @@ class Neo4jService:
     def _session(self):
         return self._driver.session()
 
+    def create_node(self, label: str, properties: Dict[str, Any]):
+        """Create a generic node with the given label and properties."""
+        query = f"CREATE (n:{label} $properties) RETURN n.id AS id"
+        with self._session() as session:
+            result = session.run(query, properties=properties)
+            record = result.single()
+            return record["id"] if record else None
+
+    def execute_query(self, query: str, parameters: Dict[str, Any] = None):
+        """Execute a custom Cypher query."""
+        with self._session() as session:
+            result = session.run(query, parameters or {})
+            return result.data()
+
     def create_facility_node(self, facility_data: Dict[str, Any], organization_id: str):
         """Create a Facility node."""
         query = (
@@ -110,6 +124,7 @@ class Neo4jService:
             captured_at: datetime($captured_at),
             NO2: $no2,
             CO: $co,
+            HCHO: $hcho,
             CH4: $ch4,
             SO2: $so2,
             AOD: $aod,
@@ -128,6 +143,7 @@ class Neo4jService:
                 captured_at=datetime.now().isoformat(),
                 no2=eo_data.get("no2_avg"),
                 co=eo_data.get("co_avg"),
+                hcho=eo_data.get("hcho_avg"),
                 ch4=eo_data.get("ch4_avg"),
                 so2=eo_data.get("so2_avg"),
                 aod=eo_data.get("aod_avg"),
@@ -153,5 +169,69 @@ class Neo4jService:
         with self._session() as session:
             result = session.run(query, org_id=org_id, threshold=threshold)
             return [r.data() for r in result]
+    
+    def count_nodes(self, label: str, properties: Dict[str, Any] = None) -> int:
+        """Count nodes of a specific label with optional property filters"""
+        where_clause = ""
+        if properties:
+            conditions = [f"n.{key} = ${key}" for key in properties.keys()]
+            where_clause = "WHERE " + " AND ".join(conditions)
+        
+        query = f"MATCH (n:{label}) {where_clause} RETURN count(n) as count"
+        
+        with self._session() as session:
+            result = session.run(query, **(properties or {}))
+            record = result.single()
+            return record["count"] if record else 0
+    
+    def get_nodes_by_label(self, label: str, properties: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+        """Get all nodes of a specific label with optional property filters"""
+        where_clause = ""
+        if properties:
+            conditions = [f"n.{key} = ${key}" for key in properties.keys()]
+            where_clause = "WHERE " + " AND ".join(conditions)
+        
+        query = f"MATCH (n:{label}) {where_clause} RETURN properties(n) as node"
+        
+        with self._session() as session:
+            result = session.run(query, **(properties or {}))
+            return [r["node"] for r in result]
+    
+    def delete_node(self, node_id: str, label: str):
+        """Delete a node by ID and label"""
+        query = f"MATCH (n:{label} {{id: $id}}) DETACH DELETE n"
+        
+        with self._session() as session:
+            session.run(query, id=node_id)
+    
+    def delete_all_nodes(self, label: str, properties: Dict[str, Any] = None) -> int:
+        """Delete all nodes of a specific label with optional property filters"""
+        where_clause = ""
+        if properties:
+            conditions = [f"n.{key} = ${key}" for key in properties.keys()]
+            where_clause = "WHERE " + " AND ".join(conditions)
+        
+        query = f"MATCH (n:{label}) {where_clause} DETACH DELETE n RETURN count(n) as deleted"
+        
+        with self._session() as session:
+            result = session.run(query, **(properties or {}))
+            record = result.single()
+            return record["deleted"] if record else 0
+    
+    def update_node(self, node_id: str, label: str, properties: Dict[str, Any]):
+        """Update a node's properties"""
+        # Remove 'id' from properties to avoid conflict with the MATCH clause
+        filtered_properties = {k: v for k, v in properties.items() if k != 'id'}
+        
+        if not filtered_properties:
+            return  # Nothing to update
+        
+        set_clauses = [f"n.{key} = ${key}" for key in filtered_properties.keys()]
+        set_clause = ", ".join(set_clauses)
+        
+        query = f"MATCH (n:{label} {{id: $id}}) SET {set_clause} RETURN n"
+        
+        with self._session() as session:
+            session.run(query, id=node_id, **filtered_properties)
 
 

@@ -8,7 +8,7 @@ import os
 import secrets
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 from pydantic import EmailStr
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from typing import Optional
 import httpx
@@ -21,7 +21,7 @@ from db.database import get_db
 load_dotenv()
 
 # Secrets & Config
-SECRET_KEY = os.getenv("ROOT_SECRET_KEY")
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
@@ -115,7 +115,8 @@ def generate_verification_token() -> str:
     return secrets.token_urlsafe(32)
 
 async def send_verification_email(email: EmailStr, token: str):
-    verify_url = f"http://localhost:8000/verify-email?token={token}"
+    verify_url_base = os.getenv("VERIFY_EMAIL_URL", "http://localhost:3000/verify-email")
+    verify_url = f"{verify_url_base}?token={token}"
     
     message = MessageSchema(
     subject="Verify Your Email Address - VeriEarth",
@@ -197,11 +198,26 @@ def validate_refresh_token(token: str) -> dict:
     except PyJWTError:  # Use PyJWTError instead of JWTError
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
-def decode_token(token: str, expected_type: Optional[str] = None) -> dict:
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        if expected_type and payload.get("type") != expected_type:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Invalid token type, expected {expected_type}")
-        return payload
-    except PyJWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+def get_current_user_from_cookies(request: Request, db: Session = Depends(get_db)) -> User:
+    """Get current user from httpOnly cookies"""
+    from auth.cookie_jwt import CookieJWTService
+    
+    user_data = CookieJWTService.get_current_user_from_cookies(request)
+    if not user_data:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    user = get_user_by_email(db, user_data["email"])
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    if not user.is_active:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
+
+    return user

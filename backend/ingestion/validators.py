@@ -26,9 +26,13 @@ def validate_suppliers(row: Dict[str, Any]) -> List[str]:
 
 def validate_facilities(row: Dict[str, Any]) -> List[str]:
     errors: List[str] = []
-    missing = _has(row, ["facility_id", "name", "country"])
+    missing = _has(row, ["name", "country"])
     if missing:
         errors.append(f"missing fields: {','.join(missing)}")
+    
+    # Set facility_id if not provided (use name as fallback)
+    if not row.get("facility_id"):
+        row["facility_id"] = row.get("name", "unknown").replace(" ", "_").lower()
     
     # Type is optional - if not provided, we'll infer it from the name
     if row.get("type"):
@@ -41,9 +45,14 @@ def validate_facilities(row: Dict[str, Any]) -> List[str]:
 
 def validate_routes(row: Dict[str, Any]) -> List[str]:
     errors: List[str] = []
-    missing = _has(row, ["route_id", "origin_facility_id", "destination_facility_id", "transport_mode"])
+    missing = _has(row, ["route_id", "origin_facility_id", "destination_facility_id"])
     if missing:
         errors.append(f"missing fields: {','.join(missing)}")
+    
+    # Set default transport_mode if not provided
+    if not row.get("transport_mode"):
+        row["transport_mode"] = "road_truck"  # Default transport mode
+    
     try:
         if row.get("distance_km") is not None:
             d = float(row["distance_km"])  # type: ignore[arg-type]
@@ -56,9 +65,14 @@ def validate_routes(row: Dict[str, Any]) -> List[str]:
 
 def validate_shipments(row: Dict[str, Any]) -> List[str]:
     errors: List[str] = []
-    missing = _has(row, ["shipment_id", "origin_facility_id", "destination_facility_id", "transport_mode", "weight_kg"])
+    missing = _has(row, ["shipment_id", "origin_facility_id", "destination_facility_id", "weight_kg"])
     if missing:
         errors.append(f"missing fields: {','.join(missing)}")
+    
+    # Set default transport_mode if not provided
+    if not row.get("transport_mode"):
+        row["transport_mode"] = "road_truck"  # Default transport mode
+    
     try:
         w = float(row.get("weight_kg", 0) or 0)  # type: ignore[arg-type]
         if w <= 0:

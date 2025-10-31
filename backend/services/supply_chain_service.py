@@ -13,9 +13,10 @@ class SupplyChainService:
         self.neo4j = neo4j
         self.organization_id = organization_id
 
-    def create_facility(self, payload: FacilityCreate) -> Facility:
+    def create_facility(self, payload: FacilityCreate, custom_id: str = None) -> Facility:
         try:
             pg_facility = Facility(
+                id=custom_id,  # Use custom ID if provided
                 organization_id=self.organization_id,
                 name=payload.name,
                 facility_type=payload.facility_type.value,
@@ -24,24 +25,14 @@ class SupplyChainService:
                 city=payload.city,
                 country=payload.country,
                 capacity_tons=payload.capacity_tons,
+                supplier_id=payload.supplier_id,  # Add supplier_id if present
             )
             self.db.add(pg_facility)
             self.db.commit()
             self.db.refresh(pg_facility)
 
-            self.neo4j.create_facility_node(
-                {
-                    'id': pg_facility.id,
-                    'name': payload.name,
-                    'type': payload.facility_type.value,
-                    'latitude': payload.latitude,
-                    'longitude': payload.longitude,
-                    'city': payload.city,
-                    'country': payload.country,
-                    'capacity_tons': payload.capacity_tons,
-                },
-                self.organization_id,
-            )
+            # Neo4j will be populated later via separate process
+            logger.info(f"Created facility {pg_facility.id} in PostgreSQL")
 
             return pg_facility
         except Exception as e:
@@ -64,18 +55,8 @@ class SupplyChainService:
             self.db.commit()
             self.db.refresh(pg_route)
 
-            self.neo4j.create_route_relationship(
-                {
-                    'origin_id': payload.origin_facility_id,
-                    'dest_id': payload.destination_facility_id,
-                    'route_id': pg_route.id,
-                    'transport_mode': payload.transport_mode.value,
-                    'distance_km': payload.distance_km,
-                    'duration_hours': payload.duration_hours,
-                    'emission_factor': None,
-                },
-                self.organization_id,
-            )
+            # Neo4j will be populated later via separate process
+            logger.info(f"Created route {pg_route.id} in PostgreSQL")
 
             return pg_route
         except Exception as e:
@@ -99,6 +80,10 @@ class SupplyChainService:
             self.db.add(pg_shipment)
             self.db.commit()
             self.db.refresh(pg_shipment)
+            
+            # Neo4j will be populated later via separate process
+            logger.info(f"Created shipment {pg_shipment.id} in PostgreSQL")
+            
             return pg_shipment
         except Exception as e:
             self.db.rollback()

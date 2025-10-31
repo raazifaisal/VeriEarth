@@ -1,15 +1,63 @@
 import ee
 from datetime import datetime
 from typing import List, Dict, Literal
+import os
+import json
+from config import GEE_PROJECT_ID, GEE_SERVICE_ACCOUNT_KEY_PATH, GEE_SERVICE_ACCOUNT_EMAIL
 
 # Initialize Earth Engine
 def initialize_earth_engine():
     try:
-        ee.Initialize(project='ee-raazifaisal')
-        print("✅ Earth Engine Initialized with project 'ee-raazifaisal'")
+        # First, try to use default authentication (user account) - this works for development
+        # Check if already initialized
+        try:
+            ee.Number(1).getInfo()
+        except:
+            # Not initialized, so initialize with default auth
+            ee.Initialize(project=GEE_PROJECT_ID)
+            print(f"✅ Earth Engine Initialized with default auth for project '{GEE_PROJECT_ID}'")
+            
     except Exception as e:
-        print(f"⚠️ Earth Engine Initialization Failed: {e}")
-        raise e
+        print(f"⚠️ Default auth failed, trying service account...: {e}")
+        try:
+            # Fallback to service account if default auth fails
+            gee_service_account_key = os.getenv('GEE_SERVICE_ACCOUNT_KEY')
+            
+            if gee_service_account_key:
+                # Parse JSON from environment variable
+                if isinstance(gee_service_account_key, str):
+                    service_account_info = json.loads(gee_service_account_key)
+                else:
+                    service_account_info = gee_service_account_key
+                
+                # Use the correct initialization method
+                credentials = ee.ServiceAccountCredentials(
+                    email=service_account_info['client_email'],
+                    key_file=None,
+                    key_data=json.dumps(service_account_info)
+                )
+                ee.Initialize(credentials, project=GEE_PROJECT_ID)
+                print(f"✅ Earth Engine Initialized with service account from env for project '{GEE_PROJECT_ID}'")
+            
+            # Check if we have service account file path
+            elif GEE_SERVICE_ACCOUNT_KEY_PATH and os.path.exists(GEE_SERVICE_ACCOUNT_KEY_PATH):
+                # Use service account file authentication - the correct way
+                credentials = ee.ServiceAccountCredentials(
+                    email=GEE_SERVICE_ACCOUNT_EMAIL,
+                    key_file=GEE_SERVICE_ACCOUNT_KEY_PATH
+                )
+                ee.Initialize(credentials, project=GEE_PROJECT_ID)
+                print(f"✅ Earth Engine Initialized with service account file for project '{GEE_PROJECT_ID}'")
+            
+            else:
+                raise Exception("No authentication method available")
+                
+        except Exception as e2:
+            print(f"⚠️ Earth Engine Initialization Failed: {e2}")
+            print("💡 To fix this, you need to:")
+            print("   1. Run: earthengine authenticate (for development)")
+            print("   2. Or set up service account credentials")
+            raise e2
 
 # Define the pollutants and their datasets
 POLLUTANTS = [
@@ -62,53 +110,88 @@ def fetch_pollutant_data(aoi: Dict, start_date: str, end_date: str, interval: Li
 
     all_data = []
 
+    pollutant_count = 0
     for pollutant in POLLUTANTS:
-        print(f"\n🔎 Processing pollutant: {pollutant['name']} from dataset: {pollutant['dataset']} using band: {pollutant['band']}")
+        pollutant_count += 1
+        print(f"\n{'='*60}")
+        print(f"🔎 [{pollutant_count}/{len(POLLUTANTS)}] Processing pollutant: {pollutant['name']}")
+        print(f"   Dataset: {pollutant['dataset']}")
+        print(f"   Band: {pollutant['band']}")
+        print(f"{'='*60}")
 
-        collection = ee.ImageCollection(pollutant['dataset']) \
-            .filterBounds(aoi_geometry) \
-            .filterDate(start_date, end_date) \
-            .select(pollutant['band'])
+        try:
+            collection = ee.ImageCollection(pollutant['dataset']) \
+                .filterBounds(aoi_geometry) \
+                .filterDate(start_date, end_date) \
+                .select(pollutant['band'])
 
-        print(f"   ✅ Collection Filtered - Found {collection.size().getInfo()} images for {pollutant['name']}")
+            collection_size = collection.size().getInfo()
+            print(f"   ✅ Collection Filtered - Found {collection_size} images for {pollutant['name']}")
 
-        for start, end in date_ranges:
-            if interval == 'day':
-                period_label = start.format('YYYY-MM-dd').getInfo()
-            elif interval == 'week':
-                year = start.get('year').format().getInfo()
-                week = start.get('week').format().getInfo()  # Week 1 to 52
-                period_label = f"{year}-W{week.zfill(2)}"
-            elif interval == 'month':
-                period_label = start.format('YYYY-MM').getInfo()
-            elif interval == 'year':
-                period_label = start.format('YYYY').getInfo()
-            else:
-                raise ValueError(f"Unsupported interval: {interval}")
+            period_count = 0
+            for start, end in date_ranges:
+                period_count += 1
+                if interval == 'day':
+                    period_label = start.format('YYYY-MM-dd').getInfo()
+                elif interval == 'week':
+                    year = start.get('year').format().getInfo()
+                    week = start.get('week').format().getInfo()  # Week 1 to 52
+                    period_label = f"{year}-W{week.zfill(2)}"
+                elif interval == 'month':
+                    period_label = start.format('YYYY-MM').getInfo()
+                elif interval == 'year':
+                    period_label = start.format('YYYY').getInfo()
+                else:
+                    raise ValueError(f"Unsupported interval: {interval}")
 
-            print(f"   📊 Processing {interval}: {period_label}")
+                print(f"\n   📊 [{period_count}/{len(date_ranges)}] Processing {interval}: {period_label}")
+                print(f"      ⏳ Fetching data...")
 
-            period_image = collection.filterDate(start, end).mean().clip(aoi_geometry)
+                try:
+                    period_image = collection.filterDate(start, end).mean().clip(aoi_geometry)
 
-            try:
-                mean_value = period_image.reduceRegion(
-                    reducer=ee.Reducer.mean(),
-                    geometry=aoi_geometry,
-                    scale=1000,
-                    maxPixels=1e13
-                ).get(pollutant['band']).getInfo()
+                    print(f"      ⏳ Computing mean value...")
+                    mean_value = period_image.reduceRegion(
+                        reducer=ee.Reducer.mean(),
+                        geometry=aoi_geometry,
+                        scale=1000,
+                        maxPixels=1e13
+                    ).get(pollutant['band']).getInfo()
 
-                print(f"      ✅ {pollutant['name']} average for {period_label}: {mean_value}")
+                    print(f"      ✅ SUCCESS: {pollutant['name']} = {mean_value} for {period_label}")
+                    
+                    all_data.append({
+                        "period": period_label,
+                        "pollutant": pollutant['name'],
+                        "value": mean_value,
+                        "interval": interval
+                    })
 
-                all_data.append({
-                    "period": period_label,
-                    "pollutant": pollutant['name'],
-                    "value": mean_value,
-                    "interval": interval
-                })
-
-            except Exception as e:
-                print(f"      ⚠️ Failed to compute mean for {pollutant['name']} in {period_label}: {e}")
+                except Exception as e:
+                    print(f"      ⚠️ FAILED: {pollutant['name']} for {period_label}: {e}")
+                    all_data.append({
+                        "period": period_label,
+                        "pollutant": pollutant['name'],
+                        "value": None,
+                        "interval": interval
+                    })
+                
+                print(f"      ⏱️  Progress: {(period_count/len(date_ranges)*100):.1f}% complete for {pollutant['name']}")
+        except Exception as e:
+            print(f"   ❌ Error processing pollutant {pollutant['name']}: {e}")
+            # Add None values for all periods for this pollutant
+            for start, end in date_ranges:
+                if interval == 'day':
+                    period_label = start.format('YYYY-MM-dd').getInfo()
+                elif interval == 'week':
+                    year = start.get('year').format().getInfo()
+                    week = start.get('week').format().getInfo()
+                    period_label = f"{year}-W{week.zfill(2)}"
+                elif interval == 'month':
+                    period_label = start.format('YYYY-MM').getInfo()
+                elif interval == 'year':
+                    period_label = start.format('YYYY').getInfo()
+                
                 all_data.append({
                     "period": period_label,
                     "pollutant": pollutant['name'],

@@ -73,11 +73,23 @@ class BackgroundEOService:
             logger.warning(f"Facility {facility_id} not found or has no location")
             return False
         
+        # Get coordinates using PostGIS functions
+        if facility.location:
+            from sqlalchemy import text
+            result = self.db.execute(
+                text("SELECT ST_X(location) as lon, ST_Y(location) as lat FROM facilities WHERE id = :id"),
+                {"id": facility.id}
+            ).first()
+            latitude = float(result.lat) if result else 0
+            longitude = float(result.lon) if result else 0
+        else:
+            latitude, longitude = 0, 0
+        
         # Prepare facility row for enrichment
         facility_row = {
             "name": facility.name,
-            "latitude": facility.location.y,
-            "longitude": facility.location.x
+            "latitude": latitude,
+            "longitude": longitude
         }
         
         # Enrich with EO data
@@ -94,6 +106,7 @@ class BackgroundEOService:
             captured_at=datetime.now(),
             no2_value=eo_data.get("no2_avg"),
             co_value=eo_data.get("co_avg"),
+            hcho_value=eo_data.get("hcho_avg"),
             ch4_value=eo_data.get("ch4_avg"),
             so2_value=eo_data.get("so2_avg"),
             aod_value=eo_data.get("aod_avg"),

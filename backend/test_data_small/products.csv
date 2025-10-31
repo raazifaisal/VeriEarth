@@ -1,0 +1,11 @@
+product_id,name,category,uom,weight_kg,volume_m3,carbon_intensity_per_unit
+P001,Steel Rods,materials,EA,50,0.1,2.5
+P002,Electronic Components,electronics,EA,0.5,0.001,0.8
+P003,Plastic Containers,packaging,EA,2,0.05,1.2
+P004,Raw Materials,raw_materials,KG,1,0.002,1.5
+P005,Finished Goods,finished_products,EA,10,0.02,3.0
+P006,Textile Rolls,materials,KG,1.2,0.003,1.1
+P007,Microchips,electronics,EA,0.02,0.0001,0.9
+P008,Packaging Boxes,packaging,EA,0.5,0.01,0.6
+P009,Steel Sheets,materials,KG,2.0,0.004,1.8
+P010,Plastic Pellets,raw_materials,KG,1.0,0.002,1.3

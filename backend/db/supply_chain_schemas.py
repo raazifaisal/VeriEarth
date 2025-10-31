@@ -39,6 +39,7 @@ class FacilityCreate(BaseModel):
     city: Optional[str] = None
     country: str
     capacity_tons: Optional[float] = None
+    supplier_id: Optional[str] = None  # If facility is owned by a supplier
 
 
 class FacilityOut(BaseModel):

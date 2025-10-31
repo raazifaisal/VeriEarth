@@ -127,7 +127,13 @@ def _calculate_pollution_metrics(eo_data: list) -> dict:
     return {
         "aqi_score": round(aqi_score, 2),
         "pollution_level": level,
-        **{f"{p.lower()}_avg": round(v, 6) for p, v in avg_pollutants.items()}
+        "no2_avg": round(avg_pollutants.get("NO2", 0), 6),
+        "co_avg": round(avg_pollutants.get("CO", 0), 6),
+        "hcho_avg": round(avg_pollutants.get("HCHO", 0), 6),
+        "ch4_avg": round(avg_pollutants.get("CH4", 0), 6),
+        "so2_avg": round(avg_pollutants.get("SO2", 0), 6),
+        "aod_avg": round(avg_pollutants.get("AOD", 0), 6),
+        "o3_avg": round(avg_pollutants.get("O3", 0), 6),
     }
 
 

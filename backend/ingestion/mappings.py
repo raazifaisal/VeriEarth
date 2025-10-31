@@ -8,7 +8,7 @@ CANONICAL_HEADERS: Dict[str, List[str]] = {
     ],
     "facilities": [
         "facility_id","name","type","address","city","region","country","postal_code",
-        "latitude","longitude","capacity_tons","time_zone","owner_company",
+        "latitude","longitude","capacity_tons","time_zone","owner_company","supplier_id",
     ],
     "products": [
         "product_id","name","category","uom","weight_kg","volume_m3","carbon_intensity_per_unit",
@@ -64,6 +64,7 @@ SAP_HEADER_HINTS = {
         "LFDAT": "delivery_date",
         "BTGEW": "weight_kg",
         "GEWEI": "weight_unit",
+        "TRANSPORT_MODE": "transport_mode",  # Transport mode if available
     }
 }
 
