@@ -73,10 +73,10 @@
 Copy the example environment file and configure it:
 
 ```bash
-cp .env.example .env
+cp backend/.env.example backend/.env
 ```
 
-Then edit `.env` with your values. See [.env.example](.env.example) for all required variables.
+Then edit `backend/.env` with your values. See [backend/.env.example](backend/.env.example) for all required variables.
 
 ### Required Variables
 
@@ -117,8 +117,8 @@ Then edit `.env` with your values. See [.env.example](.env.example) for all requ
 
 2. **Set up environment variables**
    ```bash
-   cp .env.example .env
-   # Edit .env with your configuration (see Environment Variables section)
+   cp backend/.env.example backend/.env
+   # Edit backend/.env with your configuration (see Environment Variables section)
    ```
 
 3. **Build and start services**
@@ -158,8 +158,8 @@ Then edit `.env` with your values. See [.env.example](.env.example) for all requ
 
 5. **Configure environment**
    ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
+   cp backend/.env.example backend/.env
+   # Edit backend/.env with your configuration
    ```
 
 6. **Run migrations**
@@ -300,7 +300,7 @@ backend/
 Run the performance benchmark suite to measure API response times:
 
 ```bash
-cd tests
+cd backend/tests
 python performance_benchmark.py
 ```
 
@@ -318,17 +318,17 @@ Results are saved to `tests/performance_results.json` and include:
 ## 📚 Documentation
 
 ### Core Documentation
-- **Knowledge Graph**: `docs/kg/` - GDS queries, implementation details, frontend UI reference
-- **Analytics**: `docs/analytics/` - Business specs, MVP spec, optimization plan, sample responses
-- **Schema**: `docs/POSTGRES_SCHEMA_FOR_KG.md` - PostgreSQL schema documentation
-- **Caching**: `docs/REDIS_CACHING_STRATEGY.md` - Redis caching implementation guide
+- **Knowledge Graph**: `backend/docs/kg/` - GDS queries, implementation details, frontend UI reference
+- **Analytics**: `backend/docs/analytics/` - Business specs, MVP spec, optimization plan, sample responses
+- **Schema**: `backend/docs/POSTGRES_SCHEMA_FOR_KG.md` - PostgreSQL schema documentation
+- **Caching**: `backend/docs/REDIS_CACHING_STRATEGY.md` - Redis caching implementation guide
 
 ### Key Documents
-- `docs/analytics/ANALYTICS_BUSINESS_SPEC.md` - Business significance of analytics
-- `docs/analytics/ANALYTICS_MVP_SPEC.md` - MVP implementation specification
-- `docs/analytics/ANALYTICS_OPTIMIZATION_PLAN.md` - Future optimization roadmap
-- `docs/kg/KG_ANALYTICS_IMPLEMENTATION.md` - Complete analytics implementation guide
-- `docs/kg/KNOWLEDGE_GRAPH_INTEGRATION_PLAN.md` - KG integration architecture
+- `backend/docs/analytics/ANALYTICS_BUSINESS_SPEC.md` - Business significance of analytics
+- `backend/docs/analytics/ANALYTICS_MVP_SPEC.md` - MVP implementation specification
+- `backend/docs/analytics/ANALYTICS_OPTIMIZATION_PLAN.md` - Future optimization roadmap
+- `backend/docs/kg/KG_ANALYTICS_IMPLEMENTATION.md` - Complete analytics implementation guide
+- `backend/docs/kg/KNOWLEDGE_GRAPH_INTEGRATION_PLAN.md` - KG integration architecture
 
 ## 🔄 Data Flow
 
@@ -367,6 +367,8 @@ Results are saved to `tests/performance_results.json` and include:
 
 ### Running Migrations
 ```bash
+cd backend
+
 # Create new migration
 alembic revision --autogenerate -m "description"
 
@@ -448,7 +450,7 @@ Redis caching is implemented for:
 
 ## 📝 License
 
-See [LICENSE](../LICENSE) file in the root of the repository.
+See [LICENSE](LICENSE) file in the root of the repository.
 
 ## 🔗 Links
 
