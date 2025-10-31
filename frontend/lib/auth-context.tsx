@@ -32,6 +32,7 @@ const PROTECTED_PREFIXES = [
   '/enrichment',
   '/settings',
 ];
+const ALLOWED_UNVERIFIED_ROUTES = ['/signin', '/signup', '/verify-email', '/'];
 
 const isProtectedRoute = (path: string) => {
   if (PUBLIC_ROUTES.includes(path)) {
@@ -53,6 +54,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
+        
+        // Redirect unverified users to verification page
+        if (!userData.is_verified && pathname && isProtectedRoute(pathname)) {
+          router.push('/verify-email');
+          return;
+        }
       } else {
         setUser(null);
         if (pathname && isProtectedRoute(pathname)) {
@@ -113,8 +120,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Redirect authenticated users away from auth pages
   useEffect(() => {
-    if (!loading && user && (pathname === '/signin' || pathname === '/signup')) {
-      router.push('/dashboard');
+    if (!loading && user) {
+      // Allow unverified users to access signin/signup/verify-email pages
+      if (!user.is_verified && ALLOWED_UNVERIFIED_ROUTES.includes(pathname || '')) {
+        return; // Allow access to these pages
+      }
+      // Redirect unverified users to verification page from protected routes
+      if (!user.is_verified && pathname && isProtectedRoute(pathname)) {
+        router.push('/verify-email');
+        return;
+      }
+      // Redirect verified users away from auth pages
+      if (user.is_verified && (pathname === '/signin' || pathname === '/signup')) {
+        router.push('/dashboard');
+      }
     }
   }, [user, loading, pathname]);
 

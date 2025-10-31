@@ -9,10 +9,12 @@ import { Button } from '@/components/ui/button';
 import { DashboardHeader } from '@/components/dashboard-header';
 import { useOrganization } from '@/lib/organization-context';
 import { useAuth } from '@/lib/auth-context';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function SettingsPage() {
   const { orgId } = useOrganization();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [active, setActive] = useState<string>('organization');
   const [orgName, setOrgName] = useState<string>('');
   const [orgDesc, setOrgDesc] = useState<string>('');
@@ -72,6 +74,14 @@ export default function SettingsPage() {
         setMsg(prev => (prev ? `${prev} · ${detail}` : detail));
         return; // keep busy false in finally
       }
+      
+      // Invalidate all React Query caches for dashboard and data management
+      queryClient.invalidateQueries({ queryKey: ['dashboard-kpis', orgId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-emissions-trend', orgId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-transport-distribution', orgId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-facilities-aqi', orgId] });
+      queryClient.invalidateQueries({ queryKey: ['entity-data'] });
+      queryClient.invalidateQueries({ queryKey: ['entity-stats'] });
     } catch (e: any) {
       setMsg(e?.response?.data?.detail || e?.message || 'Failed to clear');
     } finally {
