@@ -1,4 +1,4 @@
-# VeriEarth Backend
+
 
 **VeriEarth** is a comprehensive supply chain sustainability platform that provides environmental monitoring, carbon tracking, and advanced analytics capabilities for supply chain operations.
 
