@@ -1,10 +1,10 @@
 # Proprietary Software License Agreement
 
-**Copyright (c) Echelon**
+**Copyright (c) Echelon Inc.**
 
 All rights reserved.
 
-This software and associated documentation files (the “Software”) are the proprietary and confidential property of [YOUR NAME / COMPANY NAME]. By using, copying, installing, or otherwise accessing the Software, you agree to the following terms:
+This software and associated documentation files (the “Software”) are the proprietary and confidential property of Echelon Inc. By using, copying, installing, or otherwise accessing the Software, you agree to the following terms:
 
 ---
 
@@ -26,7 +26,7 @@ Any unauthorized use or distribution will result in immediate termination of thi
 ---
 
 ## 3. Ownership
-All title, ownership rights, and intellectual property rights in and to the Software remain the sole property of [YOUR NAME / COMPANY NAME].  
+All title, ownership rights, and intellectual property rights in and to the Software remain the sole property of Echelon Inc.  
 The Software is protected by copyright, trade secret, and other applicable laws.
 
 ---
@@ -42,19 +42,19 @@ The Software is provided **“AS IS”**, without warranty of any kind, express 
 ---
 
 ## 6. Limitation of Liability
-In no event shall [YOUR NAME / COMPANY NAME] be liable for any damages arising from the use or inability to use the Software, including but not limited to incidental, special, or consequential damages.
+In no event shall Echelon Inc. be liable for any damages arising from the use or inability to use the Software, including but not limited to incidental, special, or consequential damages.
 
 ---
 
 ## 7. Termination
-This license is effective until terminated. [YOUR NAME / COMPANY NAME] may terminate this license at any time without notice if you breach any term of this Agreement.
+This license is effective until terminated. Echelon Inc. may terminate this license at any time without notice if you breach any term of this Agreement.
 
 Upon termination, you must destroy all copies of the Software in your possession.
 
 ---
 
 ## 8. Governing Law
-This Agreement shall be governed by and construed in accordance with the laws of [YOUR COUNTRY / STATE], without regard to its conflict of law provisions.
+This Agreement shall be governed by and construed in accordance with the laws of Republic of India, without regard to its conflict of law provisions.
 
 ---
 
