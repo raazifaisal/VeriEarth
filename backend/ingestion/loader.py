@@ -212,8 +212,24 @@ def load_suppliers(rows: List[Dict[str, Any]], db: Session, neo4j: Neo4jService,
             if not r.get("name"):
                 continue  # Skip if no name
             
+            # Check if supplier already exists in this organization
+            supplier_id = r.get("supplier_id") or str(uuid.uuid4())
+            existing = db.query(Supplier).filter(
+                Supplier.id == supplier_id,
+                Supplier.organization_id == org_id
+            ).first()
+            
+            if existing:
+                # Supplier already exists for this org, skip
+                continue
+            
+            # If ID exists in another org, generate a new UUID to avoid conflicts
+            # (since supplier_id is globally unique)
+            if supplier_id and db.query(Supplier).filter(Supplier.id == supplier_id).first():
+                supplier_id = str(uuid.uuid4())
+            
             supplier = Supplier(
-                id=r.get("supplier_id") or str(uuid.uuid4()),
+                id=supplier_id,
                 name=r["name"],
                 address=r.get("address"),
                 city=r.get("city"),

@@ -3,6 +3,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from db.database import get_db
+from services.redis_service import make_cache_key, cache_get, cache_set
 
 router = APIRouter(prefix="/dashboard")
 
@@ -36,6 +37,11 @@ def get_kpis(
     supplier_id: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
+    cache_key = make_cache_key("dashboard", org_id, "kpis", date_from=date_from, date_to=date_to, facility_id=facility_id, supplier_id=supplier_id)
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+    
     # If no dates provided, expand to full data range for the org; else use given
     if not date_from or not date_to:
         span = db.execute(text(
@@ -184,6 +190,7 @@ def get_kpis(
     # Remove prev fields from top-level
     for k in ("prev_shipments", "prev_distance_km", "prev_emissions_kg"):
         resp.pop(k, None)
+    cache_set(cache_key, resp, ttl=300)  # 5 minutes
     return resp
 
 
@@ -197,6 +204,11 @@ def emissions_trend(
     supplier_id: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
+    cache_key = make_cache_key("dashboard", org_id, "emissions-trend", date_from=date_from, date_to=date_to, interval=interval, facility_id=facility_id, supplier_id=supplier_id)
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+    
     bucket = {
         "day": "DATE_TRUNC('day', s.shipment_date)",
         "week": "DATE_TRUNC('week', s.shipment_date)",
@@ -239,6 +251,7 @@ def emissions_trend(
             "weight_tonne_km": tk,
             "unit_emissions": (em / tk) if tk else 0.0,
         })
+    cache_set(cache_key, result, ttl=900)  # 15 minutes
     return result
 
 
@@ -251,6 +264,11 @@ def transport_distribution(
     supplier_id: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
+    cache_key = make_cache_key("dashboard", org_id, "transport-distribution", date_from=date_from, date_to=date_to, facility_id=facility_id, supplier_id=supplier_id)
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+    
     filters = ["s.organization_id = :org"]
     params = {"org": org_id}
     if date_from:
@@ -300,6 +318,7 @@ def transport_distribution(
             "share_shipments": (int(r["shipments"]) / total_ship),
             "share_emissions": (em / total_em),
         })
+    cache_set(cache_key, result, ttl=600)  # 10 minutes
     return result
 
 
@@ -311,6 +330,11 @@ def top_routes(
     limit: int = Query(10, ge=1, le=50),
     db: Session = Depends(get_db),
 ):
+    cache_key = make_cache_key("dashboard", org_id, "top-routes", date_from=date_from, date_to=date_to, limit=limit)
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+    
     filters = ["s.organization_id = :org"]
     params = {"org": org_id, "limit": limit}
     if date_from:
@@ -357,6 +381,7 @@ def top_routes(
             "distance_km": float(r["distance_km"] or 0),
             "emissions_kg": float(r["emissions_kg"] or 0),
         })
+    cache_set(cache_key, result, ttl=600)  # 10 minutes
     return result
 
 
@@ -368,6 +393,11 @@ def carriers(
     limit: int = Query(10, ge=1, le=50),
     db: Session = Depends(get_db),
 ):
+    cache_key = make_cache_key("dashboard", org_id, "carriers", date_from=date_from, date_to=date_to, limit=limit)
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+    
     filters = ["s.organization_id = :org"]
     params = {"org": org_id, "limit": limit}
     if date_from:
@@ -402,6 +432,7 @@ def carriers(
             "emissions_kg": em,
             "unit_emissions": None,
         })
+    cache_set(cache_key, result, ttl=600)  # 10 minutes
     return result
 
 
@@ -411,6 +442,11 @@ def facilities_aqi(
     limit: int = Query(10, ge=1, le=50),
     db: Session = Depends(get_db),
 ):
+    cache_key = make_cache_key("dashboard", org_id, "facilities-aqi", limit=limit)
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+    
     sql = """
       WITH latest AS (
         SELECT DISTINCT ON (facility_id)
@@ -453,6 +489,7 @@ def facilities_aqi(
             "delta_aqi": delta,
             "status": status,
         })
+    cache_set(cache_key, result, ttl=600)  # 10 minutes
     return result
 
 

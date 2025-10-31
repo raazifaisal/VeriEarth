@@ -6,6 +6,7 @@ from services.kg_etl_service import KGETLService
 from config import NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD
 from sqlalchemy import text
 from services.prefixspan_service import build_event_sequences, PrefixSpanMiner, score_patterns
+from services.redis_service import make_cache_key, cache_get, cache_set, cache_delete_pattern
 
 router = APIRouter()
 
@@ -51,6 +52,9 @@ def clear_graphs(org_id: str = Query(...), kg: KGETLService = Depends(get_kg_etl
         with kg.neo4j_driver.session(database=dbname) as sess:
             sess.run("CALL gds.graph.drop($n, false)", {"n": names["facility"]}).consume()
             sess.run("CALL gds.graph.drop($n, false)", {"n": names["route"]}).consume()
+        # Invalidate all analytics caches for this org
+        cache_delete_pattern(f"gds:{org_id}:*")
+        cache_delete_pattern(f"prefixspan:{org_id}:*")
         return {"status": "ok", "cleared": [names["facility"], names["route"]]}
     except Exception:
         # Propagate as 500 so the frontend can handle; avoid leaking internals
@@ -61,6 +65,11 @@ def clear_graphs(org_id: str = Query(...), kg: KGETLService = Depends(get_kg_etl
 
 @router.get("/facilities/betweenness")
 def facilities_betweenness(org_id: str = Query(...), limit: int = Query(15, ge=1, le=100), kg: KGETLService = Depends(get_kg_etl)):
+    cache_key = make_cache_key("gds", org_id, "facilities", "betweenness", limit=limit)
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+    
     try:
         kg.ensure_graphs_for_org(org_id)
         names = _safe_name(org_id)
@@ -72,13 +81,20 @@ def facilities_betweenness(org_id: str = Query(...), limit: int = Query(15, ge=1
         )
         with kg.neo4j_driver.session(database=dbname) as sess:
             rows = sess.run(cy, {"g": names["facility"], "lim": limit}).data()
-        return rows
+        result = rows
+        cache_set(cache_key, result, ttl=900)  # 15 minutes
+        return result
     finally:
         kg.close()
 
 
 @router.get("/facilities/pagerank")
 def facilities_pagerank(org_id: str = Query(...), limit: int = Query(15, ge=1, le=100), kg: KGETLService = Depends(get_kg_etl)):
+    cache_key = make_cache_key("gds", org_id, "facilities", "pagerank", limit=limit)
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+    
     try:
         kg.ensure_graphs_for_org(org_id)
         names = _safe_name(org_id)
@@ -90,13 +106,20 @@ def facilities_pagerank(org_id: str = Query(...), limit: int = Query(15, ge=1, l
         )
         with kg.neo4j_driver.session(database=dbname) as sess:
             rows = sess.run(cy, {"g": names["facility"], "lim": limit}).data()
-        return rows
+        result = rows
+        cache_set(cache_key, result, ttl=900)  # 15 minutes
+        return result
     finally:
         kg.close()
 
 
 @router.get("/facilities/communities")
 def facilities_communities(org_id: str = Query(...), kg: KGETLService = Depends(get_kg_etl)):
+    cache_key = make_cache_key("gds", org_id, "facilities", "communities")
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+    
     try:
         kg.ensure_graphs_for_org(org_id)
         names = _safe_name(org_id)
@@ -113,7 +136,9 @@ def facilities_communities(org_id: str = Query(...), kg: KGETLService = Depends(
         for r in rows:
             cid = r["communityId"]
             comm.setdefault(cid, []).append(r["facilityId"])
-        return [{"communityId": cid, "size": len(m), "members": m} for cid, m in comm.items()]
+        result = [{"communityId": cid, "size": len(m), "members": m} for cid, m in comm.items()]
+        cache_set(cache_key, result, ttl=900)  # 15 minutes
+        return result
     finally:
         kg.close()
 
@@ -123,6 +148,12 @@ def shortest_path(org_id: str, srcNode: str, dstNode: str, weight: str = Query("
     """Find shortest path between two facilities using facility IDs (e.g., F001, F003)."""
     if weight not in {"distance", "duration", "emission"}:
         raise HTTPException(status_code=400, detail="Invalid weight")
+    
+    cache_key = make_cache_key("gds", org_id, "shortest-path", srcNode=srcNode, dstNode=dstNode, weight=weight)
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+    
     try:
         kg.ensure_graphs_for_org(org_id)
         names = _safe_name(org_id)
@@ -145,14 +176,22 @@ def shortest_path(org_id: str, srcNode: str, dstNode: str, weight: str = Query("
             )
             row = sess.run(cy, {"g": names["facility"], "s": node_ids["srcNodeId"], "t": node_ids["dstNodeId"], "w": weight}).single()
             if not row:
-                return {"weight": weight, "totalCost": None, "facilityIds": []}
-            return dict(row)
+                result = {"weight": weight, "totalCost": None, "facilityIds": []}
+            else:
+                result = dict(row)
+            cache_set(cache_key, result, ttl=1800)  # 30 minutes (paths don't change often)
+            return result
     finally:
         kg.close()
 
 
 @router.get("/eo/hotspots")
 def eo_hotspots(org_id: str = Query(...), limit: int = Query(20, ge=1, le=100), db: Session = Depends(get_db)):
+    cache_key = make_cache_key("eo", org_id, "hotspots", limit=limit)
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+    
     # latest per facility + simple 3m trend (delta between latest and avg previous 2 months)
     sql = text(
         """
@@ -179,11 +218,18 @@ def eo_hotspots(org_id: str = Query(...), limit: int = Query(20, ge=1, le=100), 
         """
     )
     rows = db.execute(sql, {"org": org_id, "lim": limit}).mappings().all()
-    return [dict(r) for r in rows]
+    result = [dict(r) for r in rows]
+    cache_set(cache_key, result, ttl=600)  # 10 minutes (EO data updates monthly)
+    return result
 
 
 @router.get("/routes/pagerank")
 def routes_pagerank(org_id: str = Query(...), limit: int = Query(15, ge=1, le=100), kg: KGETLService = Depends(get_kg_etl)):
+    cache_key = make_cache_key("gds", org_id, "routes", "pagerank", limit=limit)
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+    
     try:
         kg.ensure_graphs_for_org(org_id)
         names = _safe_name(org_id)
@@ -195,13 +241,20 @@ def routes_pagerank(org_id: str = Query(...), limit: int = Query(15, ge=1, le=10
         )
         with kg.neo4j_driver.session(database=dbname) as sess:
             rows = sess.run(cy, {"g": names["route"], "lim": limit}).data()
-        return rows
+        result = rows
+        cache_set(cache_key, result, ttl=900)  # 15 minutes
+        return result
     finally:
         kg.close()
 
 
 @router.get("/routes/betweenness")
 def routes_betweenness(org_id: str = Query(...), limit: int = Query(15, ge=1, le=100), kg: KGETLService = Depends(get_kg_etl)):
+    cache_key = make_cache_key("gds", org_id, "routes", "betweenness", limit=limit)
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+    
     try:
         kg.ensure_graphs_for_org(org_id)
         names = _safe_name(org_id)
@@ -213,13 +266,20 @@ def routes_betweenness(org_id: str = Query(...), limit: int = Query(15, ge=1, le
         )
         with kg.neo4j_driver.session(database=dbname) as sess:
             rows = sess.run(cy, {"g": names["route"], "lim": limit}).data()
-        return rows
+        result = rows
+        cache_set(cache_key, result, ttl=900)  # 15 minutes
+        return result
     finally:
         kg.close()
 
 
 @router.get("/routes/communities")
 def routes_communities(org_id: str = Query(...), kg: KGETLService = Depends(get_kg_etl)):
+    cache_key = make_cache_key("gds", org_id, "routes", "communities")
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+    
     try:
         kg.ensure_graphs_for_org(org_id)
         names = _safe_name(org_id)
@@ -235,7 +295,9 @@ def routes_communities(org_id: str = Query(...), kg: KGETLService = Depends(get_
         for r in rows:
             cid = r["communityId"]
             comm.setdefault(cid, []).append(r["routeId"])
-        return [{"communityId": cid, "size": len(m), "members": m} for cid, m in comm.items()]
+        result = [{"communityId": cid, "size": len(m), "members": m} for cid, m in comm.items()]
+        cache_set(cache_key, result, ttl=900)  # 15 minutes
+        return result
     finally:
         kg.close()
 
@@ -248,10 +310,19 @@ def mine_prefixspan(
     top_k: int = Query(50, ge=1, le=500),
     db: Session = Depends(get_db),
 ):
+    cache_key = make_cache_key("prefixspan", org_id, min_support=min_support, max_len=max_len, top_k=top_k)
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+    
     sequences, leg_weight = build_event_sequences(db, org_id, limit=5000)
     if not sequences:
-        return {"patterns": [], "total_sequences": 0}
+        result = {"patterns": [], "total_sequences": 0}
+        cache_set(cache_key, result, ttl=1800)  # 30 minutes
+        return result
     miner = PrefixSpanMiner(sequences, min_support=min_support, max_len=max_len)
     raw = miner.mine()
     pat = score_patterns(raw, leg_weight)
-    return {"patterns": pat[:top_k], "total_sequences": len(sequences)}
+    result = {"patterns": pat[:top_k], "total_sequences": len(sequences)}
+    cache_set(cache_key, result, ttl=1800)  # 30 minutes
+    return result

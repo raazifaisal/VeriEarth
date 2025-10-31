@@ -75,3 +75,35 @@ def root():
 def get_csrf_token():
     """Get CSRF token for frontend"""
     return {"csrf_token": generate_csrf_token()}
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint for Docker and monitoring"""
+    status = {
+        "status": "healthy",
+        "service": "VeriEarth API",
+        "version": "1.0.0"
+    }
+    
+    # Check database connection
+    try:
+        from db.database import engine
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        status["database"] = "connected"
+    except Exception as e:
+        status["status"] = "degraded"
+        status["database"] = f"error: {str(e)}"
+    
+    # Check Redis connection (optional, won't fail if Redis is down)
+    try:
+        from services.redis_service import get_redis_client
+        client = get_redis_client()
+        client.ping()
+        status["redis"] = "connected"
+    except Exception:
+        status["redis"] = "unavailable"
+        # Don't mark as unhealthy if Redis is down, it's optional
+    
+    return status

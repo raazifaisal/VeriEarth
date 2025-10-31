@@ -113,16 +113,54 @@ async def google_callback(response: Response, code: str, db: Session = Depends(g
 
 @router.get("/verify-email")
 def verify_email(token: str, db: Session = Depends(get_db)):
+    # First check if token exists
     user = get_user_by_verification_token(db, token)
 
     if not user:
-        raise HTTPException(status_code=400, detail="Invalid verification token")
+        # Token doesn't exist - check if user is already verified (idempotent)
+        # This handles the case where verification link is clicked twice
+        # We'll check by email if we can extract it, but for security we'll just return error
+        raise HTTPException(status_code=400, detail="Invalid or expired verification token")
 
+    # If user is already verified, return success (idempotent)
+    if user.is_verified:
+        return {"msg": "Email already verified. You can sign in now."}
+
+    # Verify the user
     user.is_active = True
+    user.is_verified = True  # Mark user as verified
     user.verification_token = None
     db.commit()
 
     return {"msg": "Email verified successfully"}
+
+class ResendVerificationRequest(BaseModel):
+    email: str
+
+@router.post("/resend-verification")
+async def resend_verification(request_data: ResendVerificationRequest, db: Session = Depends(get_db)):
+    """Resend verification email for an unverified user"""
+    user = get_user_by_email(db, request_data.email)
+    
+    if not user:
+        # Don't reveal if email exists or not (security best practice)
+        return {"msg": "If an account exists with this email, a verification email has been sent."}
+    
+    if user.is_verified:
+        raise HTTPException(status_code=400, detail="Email is already verified")
+    
+    # Generate new verification token
+    verification_token = generate_verification_token()
+    user.verification_token = verification_token
+    db.commit()
+    
+    # Send verification email (best-effort)
+    try:
+        await send_verification_email(user.email, verification_token)
+        return {"msg": "Verification email sent. Please check your inbox."}
+    except Exception as e:
+        logger.exception("Failed to resend verification email: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to send verification email. Please try again later.")
 
 @router.post("/refresh")
 def refresh_token(request: Request, response: Response, db: Session = Depends(get_db)):
@@ -157,8 +195,9 @@ def logout(response: Response):
     return {"msg": "Logged out successfully"}
 
 @router.get("/me")
-async def get_me(request: Request, current_user: User = Depends(get_current_user_from_cookies), db: Session = Depends(get_db)):
-    """Get current user profile and their organizations"""
+async def get_me(request: Request, db: Session = Depends(get_db)):
+    """Get current user profile and their organizations - allows unverified users to check status"""
+    current_user = get_current_user_from_cookies(request, db, require_verified=False)
     # Get user's organizations
     user_orgs = db.query(UserOrganization).filter(UserOrganization.user_id == current_user.id).all()
     org_ids = [uo.organization_id for uo in user_orgs]

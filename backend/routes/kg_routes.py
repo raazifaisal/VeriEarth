@@ -51,6 +51,12 @@ def sync_organization_kg(
         
         if phase == 1:
             stats = kg_etl.sync_phase1(org_id, last_sync)
+            # Invalidate analytics caches after sync
+            from services.redis_service import cache_delete_pattern
+            cache_delete_pattern(f"gds:{org_id}:*")
+            cache_delete_pattern(f"prefixspan:{org_id}:*")
+            cache_delete_pattern(f"dashboard:{org_id}:*")
+            cache_delete_pattern(f"eo:{org_id}:*")
             return {
                 "status": "success",
                 "phase": 1,
@@ -60,6 +66,11 @@ def sync_organization_kg(
             }
         elif phase == 2:
             stats = kg_etl.sync_phase2(org_id, last_sync)
+            # Invalidate analytics caches after sync
+            from services.redis_service import cache_delete_pattern
+            cache_delete_pattern(f"gds:{org_id}:*")
+            cache_delete_pattern(f"prefixspan:{org_id}:*")
+            cache_delete_pattern(f"dashboard:{org_id}:*")
             return {
                 "status": "success",
                 "phase": 2,

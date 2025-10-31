@@ -2,3 +2,5 @@ backend/
 __pycache__/
 .env
 venv/
+veriearth-468117-4511ba47997e.json
+*.json

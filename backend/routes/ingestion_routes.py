@@ -116,6 +116,20 @@ async def import_file(
         raise HTTPException(status_code=400, detail=f"Entity import not yet implemented for: {entity}")
 
     neo4j.close()
+    
+    # Invalidate relevant caches after data ingestion
+    if created > 0:
+        from services.redis_service import cache_delete_pattern
+        # Invalidate dashboard and analytics caches when new data is ingested
+        cache_delete_pattern(f"dashboard:{org_id}:*")
+        if entity in ("shipments", "routes", "facilities"):
+            # Shipments and routes affect PrefixSpan and GDS analytics
+            cache_delete_pattern(f"prefixspan:{org_id}:*")
+            cache_delete_pattern(f"gds:{org_id}:*")
+        if entity in ("facilities",):
+            # Facilities affect EO hotspots
+            cache_delete_pattern(f"eo:{org_id}:*")
+    
     return {"status": "ok", "created": created}
 
 

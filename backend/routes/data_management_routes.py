@@ -10,8 +10,51 @@ from db.models import Facility, Shipment, Route
 from services.supply_chain_service import SupplyChainService
 
 router = APIRouter()
+
 class ClearOrgRequest(BaseModel):
     password: str
+
+
+def _invalidate_org_cache(org_id: str) -> None:
+    """Helper to invalidate all caches for an organization."""
+    try:
+        from services.redis_service import cache_delete_pattern
+        cache_delete_pattern(f"dashboard:{org_id}:*")
+        cache_delete_pattern(f"gds:{org_id}:*")
+        cache_delete_pattern(f"prefixspan:{org_id}:*")
+        cache_delete_pattern(f"eo:{org_id}:*")
+    except Exception:
+        pass  # Non-critical, don't fail if Redis is down
+
+def _invalidate_dashboard_only(org_id: str) -> None:
+    """Helper to invalidate only dashboard caches (for non-graph entities)."""
+    try:
+        from services.redis_service import cache_delete_pattern
+        cache_delete_pattern(f"dashboard:{org_id}:*")
+    except Exception:
+        pass
+
+def _invalidate_for_entity(org_id: str, entity_type: str) -> None:
+    """Invalidate caches based on what the entity type affects."""
+    try:
+        from services.redis_service import cache_delete_pattern
+        # Dashboard is always affected
+        cache_delete_pattern(f"dashboard:{org_id}:*")
+        
+        if entity_type in ("facilities",):
+            # Facilities affect GDS facility analytics and EO hotspots
+            cache_delete_pattern(f"gds:{org_id}:*")
+            cache_delete_pattern(f"eo:{org_id}:*")
+        elif entity_type in ("routes",):
+            # Routes affect GDS route analytics
+            cache_delete_pattern(f"gds:{org_id}:*")
+        elif entity_type in ("shipments",):
+            # Shipments affect PrefixSpan and GDS route analytics
+            cache_delete_pattern(f"prefixspan:{org_id}:*")
+            cache_delete_pattern(f"gds:{org_id}:*")
+        # Suppliers, products, purchase_orders only affect dashboard (already handled above)
+    except Exception:
+        pass
 
 
 
@@ -381,6 +424,9 @@ async def clear_entire_organization(
             import logging
             logging.getLogger(__name__).error(f"Neo4j clear failed: {e}")
 
+        # 9) Invalidate all caches for this organization
+        _invalidate_org_cache(org_id)
+
         return {"status": "ok", "message": "Organization data cleared"}
     except IntegrityError as e:
         db.rollback()
@@ -406,6 +452,7 @@ async def delete_entity(
         # Delete from PostgreSQL
         db.delete(facility)
         db.commit()
+        _invalidate_for_entity(org_id, "facilities")
     elif entity_type == "suppliers":
         from db.models import Supplier
         supplier = db.query(Supplier).filter(
@@ -418,6 +465,7 @@ async def delete_entity(
         try:
             db.delete(supplier)
             db.commit()
+            _invalidate_dashboard_only(org_id)
         except IntegrityError as e:
             db.rollback()
             error_message = handle_foreign_key_error(e, "supplier", id)
@@ -434,6 +482,7 @@ async def delete_entity(
         try:
             db.delete(product)
             db.commit()
+            _invalidate_dashboard_only(org_id)
         except IntegrityError as e:
             db.rollback()
             error_message = handle_foreign_key_error(e, "product", id)
@@ -450,6 +499,7 @@ async def delete_entity(
         try:
             db.delete(purchase_order)
             db.commit()
+            _invalidate_dashboard_only(org_id)
         except IntegrityError as e:
             db.rollback()
             error_message = handle_foreign_key_error(e, "purchase order", id)
@@ -464,6 +514,7 @@ async def delete_entity(
             raise HTTPException(status_code=404, detail="Shipment not found")
         db.delete(shipment)
         db.commit()
+        _invalidate_for_entity(org_id, "shipments")
     elif entity_type == "routes":
         from db.models import Route
         route = db.query(Route).filter(
@@ -474,6 +525,7 @@ async def delete_entity(
             raise HTTPException(status_code=404, detail="Route not found")
         db.delete(route)
         db.commit()
+        _invalidate_for_entity(org_id, "routes")
     else:
         raise HTTPException(status_code=400, detail="Invalid entity type")
     
@@ -515,6 +567,10 @@ async def clear_all_entities(
             db.query(Facility).filter(Facility.organization_id == org_id).delete(synchronize_session=False)
             
             db.commit()
+            
+            # Invalidate caches after clearing facilities
+            _invalidate_org_cache(org_id)
+            
             return {
                 "status": "ok", 
                 "deleted": len(facility_ids),
@@ -541,6 +597,7 @@ async def clear_all_entities(
             deleted_count = db.query(Supplier).filter(Supplier.organization_id == org_id).count()
             db.query(Supplier).filter(Supplier.organization_id == org_id).delete(synchronize_session=False)
             db.commit()
+            _invalidate_dashboard_only(org_id)
             return {"status": "ok", "deleted": deleted_count}
         except IntegrityError:
             db.rollback()
@@ -552,6 +609,7 @@ async def clear_all_entities(
         try:
             db.query(Product).filter(Product.organization_id == org_id).delete()
             db.commit()
+            _invalidate_dashboard_only(org_id)
             return {"status": "ok", "deleted": deleted_count}
         except IntegrityError as e:
             db.rollback()
@@ -562,18 +620,21 @@ async def clear_all_entities(
         deleted_count = db.query(PurchaseOrder).filter(PurchaseOrder.organization_id == org_id).count()
         db.query(PurchaseOrder).filter(PurchaseOrder.organization_id == org_id).delete()
         db.commit()
+        _invalidate_dashboard_only(org_id)
         return {"status": "ok", "deleted": deleted_count}
     elif entity_type == "shipments":
         from db.models import Shipment
         deleted_count = db.query(Shipment).filter(Shipment.organization_id == org_id).count()
         db.query(Shipment).filter(Shipment.organization_id == org_id).delete()
         db.commit()
+        _invalidate_for_entity(org_id, "shipments")
         return {"status": "ok", "deleted": deleted_count}
     elif entity_type == "routes":
         from db.models import Route
         deleted_count = db.query(Route).filter(Route.organization_id == org_id).count()
         db.query(Route).filter(Route.organization_id == org_id).delete()
         db.commit()
+        _invalidate_for_entity(org_id, "routes")
         return {"status": "ok", "deleted": deleted_count}
     else:
         raise HTTPException(status_code=400, detail="Invalid entity type")
