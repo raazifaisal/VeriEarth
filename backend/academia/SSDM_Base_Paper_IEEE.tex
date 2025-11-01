@@ -1,0 +1,666 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+% --- Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{mathtools}
+\usepackage{siunitx}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue}
+
+% --- Math layout (IEEE recommendations) ---
+\interdisplaylinepenalty=2500 % allow multiline breaks in equations
+\setlength{\abovedisplayskip}{7pt plus 2pt minus 3pt}
+\setlength{\belowdisplayskip}{7pt plus 2pt minus 3pt}
+\setlength{\abovedisplayshortskip}{4pt plus 1pt minus 2pt}
+\setlength{\belowdisplayshortskip}{4pt plus 1pt minus 2pt}
+
+% --- Title & Authors ---
+\title{Supply Chain Emissions Optimization with Knowledge Graphs, Earth Observation, and Sequential Pattern Mining}
+
+\author{\IEEEauthorblockN{\footnotesize Himani S Kumar}
+\IEEEauthorblockA{\footnotesize\textit{School of Computer Science and Engineering,}\\
+\textit{Vellore Institute of Technology, Chennai, India}\\
+himani.skumar2022a@vitstudent.ac.in}
+\and
+\IEEEauthorblockN{\footnotesize Raazi Faisal}
+\IEEEauthorblockA{\footnotesize\textit{School of Computer Science and Engineering,}\\
+\textit{Vellore Institute of Technology, Chennai, India}\\
+raazi.faisal2022@vitstudent.ac.in}
+\and
+\IEEEauthorblockN{\footnotesize Gayathri Devi S}
+\IEEEauthorblockA{\footnotesize\textit{School of Computer Science and Engineering,}\\
+\textit{Vellore Institute of Technology, Chennai, India}\\
+gayathridevi.s@vit.ac.in}
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Pressure is increasing for corporate supply chains to cut greenhouse gas emissions; however, the available tools offer disjointed analysis. This work brings together Earth Observation data on the one hand, knowledge graph analytics, sequential pattern mining, and optimization on the other hand, in an integrated system for actionable decarbonization. The pipeline takes as input shipments, routes, facilities, and suppliers data; enriches locations with EO pollution signals from Sentinel-5P/TROPOMI; builds emission weighted knowledge graph in Neo4j; runs graph algorithms (Betweenness Centrality, PageRank, Louvain communities, shortest paths) to expose structural risks; mines frequent emission-intensive subpaths using PrefixSpan; and recommends interventions via 0/1 knapsack optimization. Dashboard interactions are 30--50x faster with Redis caching. The novelty of the approach is that it integrates EO enrichment, graph-native analytics, sequence mining, and constraint optimization within a single framework. This fills a void in which existing tools are fragmented and provide little in the way of prescriptive recommendations.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Supply chain, greenhouse gas emissions, knowledge graph, Earth Observation, Neo4j Graph Data Science, PrefixSpan, knapsack optimization, Redis caching, dashboard, API.
+\end{IEEEkeywords}
+
+\section{Introduction}
+Large, multi-modal supply chains span continents and involve hundreds of facilities, yet emissions tracking often relies on aggregate estimates or isolated facility monitoring. The complexity originates not only from scale, but from the interactions of logistics decisions. A seemingly efficient route may be followed by consistently high-emission legs, and infrequent air-lift deliveries occasionally break emissions tails, despite their low frequency. The carbon accounting model discussed above handles each lane on its own, and therefore does not consider these temporal correlations or cumulative effects.
+
+This work overcomes these limitations by combining Earth Observation (EO) data fusion, knowledge graph modeling, graph-native analytics, sequential pattern mining, and constraint-based optimization. In contrast with disconnected solutions that provide either limited accounting, or point-wise routing, the solution surfaces structural network risk (via Neo4j Graph Data Science algorithms) and reoccurring emissions-heavy patterns (via PrefixSpan sequence mining). A 0/1 knapsack optimizer then ranks measures including modal shift, rerouting and supplier switching subject to cost and service level limits. This integrated methodology exposes findings that compartmentalized analyses cannot: what facilities function as transient chokepoints, which process sequences comparatively occur more frequently and generate accumulative impact, and which measures have the potential to yield maximum reduction of emissions in relation to the investment they require.
+
+\subsection{Contributions}
+\begin{itemize}
+  \item A distilled data pipeline: Ingestion\,$\to$\,EO enrichment\,$\to$\,KG construction\,$\to$\,graph analytics\,$\to$\,pattern mining\,$\to$\,optimization.
+  \item A KG-centric data model in Neo4j for full supply networks (suppliers\,$\to$\,plants\,$\to$\,warehouses\,$\to$\,customers) with emission-weighted relationships.
+  \item Graph-native analytics using Neo4j GDS algorithms (Betweenness Centrality, PageRank, Louvain communities, shortest path) to identify structural risks and optimization opportunities.
+  \item A PrefixSpan-based sequence mining pipeline that discovers emissions-intensive subpaths from shipment sequences and maps them to KG subgraphs for root-cause analysis.
+  \item A 0/1 knapsack optimization engine that prioritizes decarbonization interventions (mode shifts, reroutes, supplier switches) based on emission reduction potential and operational constraints.
+  \item A Redis caching layer that accelerates analytics responses by 30--50x, enabling near real-time dashboard interactions.
+  \item A multi-tenant dashboard/API providing hotspots, anomaly feeds, optimization recommendations, and integration for ERP/procurement/reporting systems.
+\end{itemize}
+
+\section{Literature Review}\label{sec:lit}
+Research on supply chain emissions optimization spans multiple domains. The following sections synthesize work across seven areas relevant to this architecture: AI-driven carbon management, multi-objective network optimization, machine learning applications in logistics, life cycle assessment, knowledge graph analytics, sequential pattern mining, and reporting standards. Where existing work remains fragmented, this review identifies gaps that motivate the integrated approach presented here.
+
+\subsection{AI-driven carbon management}
+Machine learning and optimization have shown promise for reducing supply chain emissions, though most approaches focus on specific segments rather than end-to-end networks. Huang and Mao \cite{huang2024carbon} developed a data-driven framework combining ML with optimization across transportation, manufacturing, and sourcing. Their emphasis on real-time monitoring and predictive analytics resonates with this work's goal of using EO-conditioned signals and sequence-aware prediction to prioritize interventions without degrading service levels.
+
+Hussain et al. \cite{hussain2025optimizing} expanded this direction by integrating AI-based emission reduction technology (AI-ERT) with sensitivity-based optimization, showing how stakeholders can balance carbon neutrality with profitability. Their duopoly game dynamics model captures competitive scenarios where multiple actors optimize emissions simultaneously, a consideration absent from single-organization models. Earlier foundations come from Carter and Rogers \cite{carter2008framework}, whose triple bottom line framework established the theoretical basis for integrating environmental, economic, and social dimensions in supply chain management.
+
+\subsection{Multi-objective SCN optimization and federated learning approaches}
+Multi-objective optimization in supply chains increasingly leverages machine learning to handle complexity. Huang and Fang \cite{fang2024multiobjective} demonstrated proximity-optimized SCN planning via a hybrid genetic algorithm with variable neighborhood search. Their results show tight optimality gaps: \(\leq 1.5\%\) for medium-scale problems and \(\approx 0.4\%\) for large-scale ones. This implies that heuristic methods, upon proper design, can be effective, which justifies knapsack-based prioritization with budget, SLA, and pattern constraints as we have introduced in this paper.
+
+Privacy concerns arise when data sharing between entities is required for joint optimization. Abushaega et al. \cite{abushaega2025multiobjective} mitigated this challenge by integrating Federated Learning with Graph Neural Networks, obtaining an MSE of 0.198 and RMSE of 0.560 in their Fed-GNN model. Their method facilitates privacy-preserving participation of multiple parties with the same level of optimizing quality as the centralized solution. This is especially true for knowledge graph structures which cross organizational lines.
+
+Kumar and Kumar \cite{kumar2024multiobjective} propose a multi-objective mixed integer linear programming model for green supply chain design in the presence of emission of green house gases with an emphasis on the economic, environmental, and social aspects. Brandenburg et al. \cite{brandenburg2014quantitative} discuss sustainable SCM quantitative models, exemplifying the transformation toward multi-objective methods, i.e., those tools capable of solving these competing aims. Eskandarpour et al. \cite{eskandarpour2015sustainable} present an extensive optimization-based review of sustainable supply chain network design, emphasizing the value of integrated modeling approaches.
+
+\subsection{Demand prediction with machine learning and closed-loop systems}
+State-of-the-art machine learning applications for supply-chain optimization consider demand prediction and closed-loop system design. Rezaei et al. \cite{rezaei2025multiobjective} propose a new multi-objective optimization approach for closed-loop supply chain network design considering machine learning based demand prediction in uncertainty. The mixed-integer programming model optimizes the cost reduction, service level improvement, GHG emissions reduction, and job generation concurrently, indicating the possibility of full-scale sustainability optimization.
+
+Such ML-based forecasting methodology treats unknown demand situations and customer services levels are considered, which could be interpreted as EO fusion-based predictive trend modeling. The inclusion of disposal, recycling, restoration, and remanufacturing facilities in their model sheds light on circular economy applications in system design.
+
+\subsection{Life Cycle Assessment and Emission Optimization methods}
+Life cycle assessment offers a simple straightforward scheme in assessing emissions at all stages of the supply chain. Zhang et al. \cite{zhang2024carbon} proposed a boundary model for the meat supply chains to trace the emission accumulation from breeding to transportation, processing and distribution. Together with enhanced genetic algorithms for route planning, their method attained 24.19\% reduction in emission, indicating that systemic LCA-based methods can bring significant improvements through optimization. Basile et al. \cite{basile2022supply} used comparable concepts for the production of biofuel from forest residues. They were able to determine emissions of 10.4 gCO2/MJMeOH by including collection, transport, storage, and processing. This work implicates an important rule of thumb: ``One should never calculate emissions based on a life cycle half-way through the life cycle''. The proposed system follows this viewpoint and contains the integration of facility-level emissions (from EO data), transport emissions at the route-level, and pattern-level aggregation over sequences rather than individual trips by the sequences.
+
+\subsection{Infrastructure and organizational durability in logistics}
+The impact of infrastructure quality in sustainable logistics performance has recently attracted significant attention. Ohakwe and Wu \cite{ohakwe2025impact} investigate the influence of organizational sustainability on logistics performance, identifying a significant positive association ($\beta = 0.45$, $p < 0.001$) that is moderated by the quality of infrastructure. Their mixed-methods research illustrates that strong infrastructure multiplied the benefits of sustainability, and that deficits in roads and energy systems compromised them. This result is especially useful for EO/GIS fusion methods since different emission reduction strategies' feasibility is affected by infrastructure limitations.
+
+The descriptive research that infrastructure quality partially mediates (Sobel $\beta = 0.28$, $p < 0.01$) between organizational sustainability and prescriptive what-if engine scenario evaluation, indicating that organizational sustainability may have an indirect positive effect on infrastructure, helping organizations in making their future scenarios more sustainable. This work highlights the need for contextually appropriate sustainability interventions in regional and infrastructure-specific optimization strategies informed by the results.
+
+\subsection{Foundations of Green and Sustainable Supply Chain}
+Srivastava \cite{srivastava2007green} provides a seminal state-of-the-art review of green supply chain management, establishing the theoretical foundations for environmental considerations in logistics. Seuring and M{\"u}ller \cite{seuring2008core} propose a conceptualization of sustainable supply chain management that bridges theory and practice. Ahi and Searcy \cite{ahi2013comparative} apply content analysis on definitions of green and sustainable supply chain management, clarifying terminological distinctions in the field.
+
+Gold et al. \cite{gold2010sustainable} investigate the role of inter-organizational resources in sustainable supply chain management, while Genovese et al. \cite{genovese2017sustainable} investigate the shift towards principles of circular economy. These seminal contributions provide theoretical justification for considering the environmental, economic and social elements of the supply chain and hence support multi-objective models in supply chain design.
+
+\subsection{Knowledge graphs for supply chains}
+Knowledge graphs can be regarded as a natural representation of supply networks, representing both structural relations (e.g., supplier-to-facility relations, route segments) and rich attributes (e.g., emission factors, distances, capacities). Recent research includes E-liability knowledge graphs \cite{oladeji2023ai} and industrial patents on KG-based discovery \cite{ibm2023autodiscovery}. In this study, the knowledge graph is the key data structure linking EO fusion, event sequences, and optimization. This supports queries over temporal and spatial realities simultaneously.
+
+Graph Neural Networks are also more powerful algorithms in this sense. Abushaega et al. \cite{abushaega2025multiobjective} proved that GNNs can encapsulate the intricate supply chain relations with the added advantage of privacy preservation by means of federated learning. Their contribution highlights a fundamental benefit: graph representations encode both local characteristics of entities (attributes of individual facilities) and global dependencies within the network (patterns of connectivity, flow centrality). Both are key to knowing how local decisions flow through the network.
+
+\subsection{Sequential pattern mining for logistics}
+Sequential pattern mining algorithms detect frequent paths over event sequences, a feature highly adequate for logistics since shipments travel on multi-leg routes. Early foundations were provided by Srikant and Agrawal \cite{us5742811,us5819266}, who defined theoretical models of mining sequence in large databases. More recent work extends these methods to projected-database recursion \cite{lei2019mining}, yielding improved efficiency over large datasets.
+
+In the context of supply chains, they expose patterns that are hidden in aggregate statistics: frequent-offender subpaths (which occur often with high per-occurrence emissions) and rare-extremes (very infrequent but disproportionately high-impact). When translated into knowledge graph subgraphs, these patterns correspond to specific intervention points. This includes concrete route segments for modal switching, specific supplier-facility pairs for substitution, or multi-hop paths for rerouting.
+
+\subsection{Quantitative Modeling and Optimization}
+Govindan et al. \cite{govindan2014two} consider the two-echelon location-routing problems with time windows for green supply chains, illustrating the practical difficulty of multi-objective optimization. Ansari and Kant \cite{ansari2014mathematical} propose mathematical models for the design of sustainable supply chains that take into account carbon footprint and social aspects, thus laying out the methodological underpinning for optimisation models.
+
+\subsection{Standards and governance}
+The WRI/WBCSD GHG Protocol Scope~3 Category~4 and ISO~14083:2023 \cite{wri2013ghg,iso2023ghg} establish the boundaries for accounting and calculation in the operations of the transport chain. Although these regulate reporting, they do not specify the technical architecture for pattern-based analytics or EO aligned simulation; the presented system brings these functionalities into operation. Hassini et al. \cite{hassini2012literature} provide a comprehensive literature review and case study of sustainable supply chains with focus on metrics, highlighting the importance of measurement frameworks in sustainability initiatives.
+
+\subsection{Prior art (patents)}\label{subsec:prior}
+Prior filings span KG discovery (IBM US11928699 \cite{ibm2023autodiscovery}), BOM-based carbon estimation (SAP US20240296460A1 \cite{sap2024carbon}), sequence mining primitives (US5742811A; US5819266A), graph-oriented sequence mining (US20120197854A1), and monitoring/tracking devices (e.g., US7702438B2; US7853436B2). None integrate EO satellite data with sequential mining and real-time what-if simulation as a unified stack. This gap moti\-vates the end-to-end design presented here.
+
+\section{Methodology}
+\subsection{Study design and workflow}
+The system transforms raw operational data into prioritized intervention recommendations through six sequential stages. Data ingestion begins with shipments, facilities, routes, and supplier information from CSV or Excel files, with schema normalization and quality validation. Earth Observation enrichment then fetches pollution signals (NO$_2$, CO, SO$_2$, O$_3$, HCHO, aerosols) from Sentinel-5P/TROPOMI for each facility's area of interest, storing temporal snapshots in PostgreSQL. 
+
+Knowledge graph construction builds a typed, attributed network in Neo4j where edges carry emission weights derived from shipment aggregates. Graph analytics follow using Neo4j GDS algorithms: Betweenness Centrality surfaces chokepoint facilities; PageRank identifies influential hubs; Louvain communities reveal operational clusters; and Dijkstra shortest paths expose alternative routes. Sequence mining with PrefixSpan discovers frequent emission-intensive subpaths, scoring each by support frequency and cumulative emission impact. Finally, a 0/1 knapsack optimizer ranks interventions (mode shifts, reroutes, supplier switches) that maximize emission reduction while respecting budget limits and service-level agreements.
+
+\subsection{Data and preprocessing}
+Inputs include shipment/event logs (origins, hubs, modes, carriers, timestamps), master data (facilities, suppliers, lanes), EO tiles (e.g., Sentinel-5P/TROPOMI NO$_2$, CO, SO$_2$), and ground sensors. The preprocessing pipeline performs schema unification, unit normalization, time-zone harmonization, and basic quality edits (deduplication; missing-value imputation for bounded features). Geometries are standardized to WGS84; transport links are segmented for spatial joins.
+
+\subsection{Knowledge graph construction}
+The system instantiates a directed, attributed graph with nodes for facilities, routes, products, and transport legs; edges encode ship/make/transform relations with attributes for distance, dwell, mode, carrier, emission factors, and capacity. See Section~\ref{sec:lit} and Core Components for formalism. The KG serves as the integration spine for mining and simulation.
+
+\subsection{EO/GIS fusion}
+Facilities and route segments are buffered into AOIs; EO tiles are joined spatially and temporally to events to derive context signals per unit and time window. Ground-sensor streams are used for validation and drift checks. The fused signal contributes to emissions attribution and to trend models; implementation details follow Section~\ref{fig:block} and EO/GIS Fusion in Core Components.
+
+\subsection{Graph analytics with Neo4j GDS}
+Once the knowledge graph is constructed, organization-scoped projections are created using \texttt{gds.graph.project} to enable efficient graph algorithms. The facility graph projection collapses Route nodes into weighted directed edges between Facility nodes, where edge weights encode distance, duration, and emission properties. Four algorithms provide complementary insights into network structure.
+
+\subsubsection{Betweenness Centrality}
+Betweenness Centrality identifies facilities that appear on many shortest paths between pairs. For a facility $v$ in graph $G$, the betweenness score is computed as:
+\begin{equation}
+C_B(v) = \sum_{s \neq v \neq t} \frac{\sigma_{st}(v)}{\sigma_{st}},
+\end{equation}
+where $\sigma_{st}$ is the total number of shortest paths from $s$ to $t$, and $\sigma_{st}(v)$ is the number of those paths passing through $v$. These chokepoints create single points of failure: when a facility with high betweenness fails or becomes congested, many routes are disrupted simultaneously. Redundancy planning should prioritize these locations.
+
+\subsubsection{PageRank}
+PageRank assigns influence scores based on connectivity patterns. The iterative update for facility $v$ follows:
+\begin{equation}
+PR(v) = \frac{1-d}{|V|} + d \sum_{u \in M(v)} \frac{PR(u)}{L(u)},
+\end{equation}
+where $d$ is the damping factor (typically 0.85), $M(v)$ is the set of facilities linking to $v$, and $L(u)$ is the out-degree of $u$. Facilities with high PageRank act as hubs, attracting flows from multiple suppliers. Routes with high PageRank serve as critical corridors where consolidation or mode-shift interventions can have disproportionate impact.
+
+\subsubsection{Louvain Community Detection}
+Louvain community detection partitions facilities into clusters by maximizing modularity:
+\begin{equation}
+Q = \frac{1}{2m} \sum_{ij} \left[A_{ij} - \frac{k_i k_j}{2m}\right] \delta(c_i, c_j),
+\end{equation}
+where $A_{ij}$ is the adjacency matrix, $k_i$ is the degree of node $i$, $m$ is the total number of edges, $c_i$ is the community assignment of node $i$, and $\delta$ is the Kronecker delta. These clusters often correspond to regional operational zones or supplier-facility groups. Interventions can target entire communities (e.g., regional rail consolidation) rather than individual facilities.
+
+\subsubsection{Shortest Path Computation}
+Shortest path computation (Dijkstra) reveals alternatives when optimized by different metrics. For a path $P = (v_1, v_2, \ldots, v_k)$ from source $s$ to target $t$, the total cost under weight function $w$ is:
+\begin{equation}
+W(P) = \sum_{i=1}^{k-1} w(v_i, v_{i+1}).
+\end{equation}
+Paths minimizing distance may differ from those minimizing emissions, creating trade-offs that inform mode selection and route planning decisions.
+
+All results are cached in Redis with a 15-minute time-to-live per organization, invalidated automatically when new data is synced. Complete query specifications and graph projection patterns are documented in \texttt{GDS\_NE04J\_QUERIES.md}.
+
+\subsection{Sequence mining pipeline with PrefixSpan}
+Event logs are encoded as sequences of items (e.g., origin\,$\to$\,mode\,$\to$\,destination). Frequent emissions-intensive patterns are mined using PrefixSpan with projected-database recursion. Minimum support is set per data scale (default: 0.5--1\% of sequences, absolute floor of 25); maximum pattern length defaults to 5 tokens to balance recall and tractability. Mined patterns are scored by support count and aggregated emission sum/mean; top-K results are cached for 30 minutes. Patterns are mapped back to KG subpaths for root-cause analysis.
+
+\subsection{Pattern classification and KPIs}
+Patterns are labeled using frequency and impact statistics (mean/percentile emissions per occurrence) according to Eq.~\eqref{eq:class}. KPIs include total emissions, intensity, support, tail risk, and affected volume. These labels prioritize remediation (e.g., frequent-offender vs rare-extreme) and drive guardrails in simulation.
+
+\subsection{Prescriptive what-if optimization}
+The system evaluates scenarios that alter modes, routes, suppliers, or facilities. The multi-objective model (emissions, cost, service) and constraints are detailed in Prescriptive What-If Simulation. Pattern-specific constraints enable removal or mitigation of targeted subpaths; solutions are ranked via a composite score for decision support.
+
+\subsection{Implementation notes}
+A reference stack uses a graph database for the KG, time-series storage for signals, object storage for EO tiles, streaming for events, services for mining and simulation, and a dashboard/API layer. Security covers tenant isolation and role-based controls. See Sections System Overview and SaaS Dashboard for deployment view.
+
+\section{Why Sequences and Predictive Trends}
+\subsection{Limits of pointwise analysis}
+Lane-by-lane or facility-by-facility optimization overlooks systemic interactions. Consider a warehouse route that appears efficient in isolation: low distance, standard truck mode, moderate emissions per kilometer. However, this route consistently precedes an air-freight leg that generates orders of magnitude higher emissions. Pointwise analysis would optimize the warehouse route, missing the compound effect. Similarly, infrequent air-lift shipments may represent only 2\% of volume but 40\% of total emissions. These tail spikes remain hidden in aggregate statistics. Third, disruptions create cascade patterns: when a primary route fails, shipments repeatedly detour through a secondary path that, while functional, generates systematically higher emissions than normal operations. Static emission factor calculations (EF\,$\times$\,distance) cannot capture these temporal dependencies.
+
+\subsection{What sequences reveal}
+Sequence mining reveals patterns that aggregate statistics hide. Consider a pattern $P$ (e.g., ``Supplier\,$\to$\,Hub\,$\to$\,Air\,$\to$\,Customer during Q4'') extracted from the shipment sequence database $\mathcal{D}$. Each pattern carries three signals. Frequency $f_P$ accounts for the number of times this sequence recurs at operational tiers, seasons, and partner networks. Impact $\bar{E}_P$ denotes expected emissions per event, along with tail risk estimates (for example, at the 95th percentile). Context maps the pattern to individual KG subpaths by revealing exact intervention points: which route segments to reroute, which mode transitions to shift, which supplier-facility links to substitute.
+
+Such signals make possible prioritization by directly actionable value, rather than total emissions alone. Frequent-offender patterns (high $f_P$, high $\bar{E}_P$) can be sufficiently profitable to justify infrastructure investments such as dedicated rail spurs or regional consolidation. Rare-extreme patterns (low $f_P$, very high $\bar{E}_P$) are to be dealt with differently: with recourse strategies such as emergency rerouting procedures, contracts for substitute suppliers, or expansion of capacity to prevent use of these patterns at peak demand.
+
+\subsection{Predictive trends with EO fusion}
+EO and ground sensor signals provide exogenous contextual background to explain variability of emissions. Pollution readings, proxies for congestion, and seasonal elements all have an impact on the carbon-intensity of a pattern over time. A time-series model conditions emission expectations on these factors:
+\begin{equation}
+\mathbb{E}[E\mid P,t] = g\big(\text{EO}(t),\text{mode},\text{lane},\text{season}\big),
+\end{equation}
+where $g(\cdot)$ can be a regularized regression, a recurrent neural network, or any other time-series learner based on the availability of data and complexity. This provides the ability to predict: if a pattern turns especially carbon-intensive during holiday peaks (from congestion, greater air-freight use, or any other seasonal factor), businesses can anticipate those periods and reduce capacity or shift to different modes prior to their arrival.
+
+\subsection{Scale and volume considerations}
+Global supply networks operate at substantial scale: thousands of facilities, tens of thousands of lanes, and millions of annual shipments. Event streams can go up to 100 or more events per second in peak times. PrefixSpan's projected-database method, when combined with Redis caching, enables near-real-time pattern mining at such scales. Instead of the entire database being re-mined upon arrival of new shipments, the system applies incremental cache invalidation and on-demand re-mining to the affected pattern subsets. Complete re-mining is performed only during explicit synchronization operations (e.g., after bulk data imports or when administrators initiate a full refresh).
+
+\subsection{Demonstrated benefits over separate analysis}
+\begin{itemize}
+  \item \textbf{Temporal causality}: operational context and decision paths are represented instead of static snapshots.
+  \item \textbf{Tail management}: it directly identifies the low-frequency, high-impact spikes which dominate the total emissions.
+  \item \textbf{Intervention targeting}: it gives actual subpaths for removal/replacement and not just scores.
+  \item \textbf{Seasonality ready}: predictive patterns inform when conditions deteriorate for proactive capacity/mode planning.
+\end{itemize}
+
+\subsection{Implications for business, policy and practice}
+\begin{itemize}
+  \item \textbf{Scope 3 governance}: pattern-based accounting enhances the audit trails for ISO 14083 and GHG Protocol reports.
+  \item \textbf{Supplier engagement}: measures partner-specific subpaths to negotiate improvements or to qualify alternatives.
+  \item \textbf{Risk and resilience}: identifies structural detours that repeatedly emerge during disruption and potential strategic redesign.
+  \item \textbf{Cost--carbon trade-offs}: Pareto fronts enable transparent decisions under price, SLA and policy constraints.
+\end{itemize}
+
+\subsection{Comparison to traditional approaches}
+\begin{table}[!t]
+\centering
+\caption{Traditional vs. sequence\,+\,EO method}
+\begin{tabular}{@{}p{0.34\linewidth}p{0.58\linewidth}@{}}
+\toprule
+\textbf{Traditional carbon accounting} & \textbf{Proposed sequence\,+\,EO approach} \\
+\midrule
+Static EF\,$\times$\,distance, lane-by-lane & Temporal patterns across legs; context from EO/ground signals \\
+Aggregates hide tail spikes & Rare-extreme patterns isolated and prioritized \\
+Limited prescriptive guidance & Subpaths mapped on KG for concrete reroute/mode/sup\-plier actions \\
+Batch reporting cadence & Incremental mining with streaming events \\
+\bottomrule
+\end{tabular}
+\label{tab:compare}
+\end{table}
+
+\section{System Overview}
+\subsection{Scope and Entities}
+The system covers entities and flows across suppliers, plants, warehouses, and customers, including production, transform, and ship edges. Environmental attributes include mode-specific emission factors (EF), distances, dwell, load, and EO-derived pollution context.
+
+\subsection{Block Flow}
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=\linewidth]{block-diagram.png}% provide: block-diagram.png
+  \caption{Block flow: GIS/EO/sensor inputs feed the knowledge graph; sequence mining and what-if simulation drive the dashboard and external systems.}
+  \label{fig:block}
+\end{figure}
+
+\subsection{Platform Architecture}
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=\linewidth]{architecture_diagram.png}% provide: architecture_diagram.png
+  \caption{Platform architecture: ingestion and streaming to core stores (KG DB, time-series, objects), engines (pattern mining, simulation, ML, cache), and presentation (dashboard, API gateway) with downstream integrations.}
+  \label{fig:arch}
+\end{figure}
+
+% Optional Mermaid blocks retained as comments for future use if mermaid.sty is available.
+%\begin{mermaid}
+%graph TB
+%  GIS[GIS/Routes] --> KG[Knowledge Graph]
+%  EO[EO Tiles] --> KG
+%  GS[Ground Sensors] --> KG
+%  KG --> PM[Seq Mining: PrefixSpan]
+%  PM --> SIM[What-If Simulation]
+%  SIM --> UI[Dashboard/API]
+%  UI --> EXT[ERP/Reporting/Regulatory]
+%\end{mermaid}
+
+\section{Core Components}
+\subsection{Knowledge Graph (KG)}
+Let $G=(V,E,A)$ with nodes $V$ (facilities, routes, products, transport legs), edges $E$ (ship, make, transform), and attributes $A$ (geo, cap, supplier, mode, EF). The weighted adjacency is
+\begin{equation}
+A_{ij}=\begin{cases} w_{ij}, & i\to j \\ 0, & \text{otherwise,}\end{cases}
+\end{equation}
+where $w_{ij}$ aggregates distance, time, cost, and emission intensity.
+
+\subsection{EO/GIS and Ground-Sensor Fusion}
+Facilities and route segments are buffered to areas of interest (AOIs). EO tiles (e.g., NO$_2$, CO, SO$_2$, O$_3$, HCHO, aerosols from Sentinel-5P/TROPOMI) are aligned by spatial join and time-window joins with shipment events. For unit $u$ at time $t$:
+\begin{equation}
+E_u(t)=\sum_{p=1}^{k} \omega_p\, EO_p(t)\, e^{-\alpha d_p}, \quad \sum_p \omega_p=1,
+\end{equation}
+with pixel weights $\omega_p$, distances $d_p$, and decay $\alpha$. Ground-sensor streams provide high-resolution validation and drift correction.
+
+\subsection{Sequential Pattern Mining Over Events with PrefixSpan}
+Each shipment generates an event sequence $s=\langle e_1,\dots,e_L\rangle$ where items encode origin facility, transport mode, destination facility, and other attributes. Support for a candidate pattern $P$ is defined as:
+\begin{equation}
+\mathrm{supp}(P)=\frac{|\{s\in\mathcal{D}\,:\,P\subseteq s\}|}{|\mathcal{D}|}.
+\end{equation}
+The implementation uses PrefixSpan's projected-database recursion. Rather than generating all candidate patterns upfront (as level-wise algorithms do), PrefixSpan projects the database for each frequent prefix and recursively mines the projected subset. This dramatically reduces memory and computation, especially when patterns are long or databases are sparse. The algorithm prunes branches where prefix support drops below the minimum threshold and halts expansion at the maximum pattern length (default: 5 tokens).
+
+Once patterns are mined, each is scored by its support count and emission metrics aggregated from the routes it traverses. Emission sums and means are computed from route-level weights derived from distance, mode factors, and facility proxies. High-impact patterns are cached in Redis for 30 minutes per organization, then mapped back to knowledge graph subpaths to identify exact intervention targets.
+
+\subsection{Pattern Classification for Actionability}
+\begin{equation}
+\label{eq:class}
+\mathrm{class}(P)=
+\begin{cases}
+\text{High-impact}, & \bar{E}_P>\mu_E+2\sigma_E, \\
+\text{Frequent-offender}, & \begin{aligned}[t]
+  f_P &> \mu_f+\sigma_f, \\
+  \bar{E}_P &> \mu_E,
+\end{aligned} \\
+\text{Rare-extreme}, & \begin{aligned}[t]
+  f_P &< \mu_f-\sigma_f, \\
+  \bar{E}_P &> \mu_E+3\sigma_E,
+\end{aligned} \\
+\text{Normal}, & \text{otherwise.}
+\end{cases}
+\end{equation}
+These labels prioritize remediation, guardrails, and simulation focus.
+
+\section{Knapsack Optimization for Intervention Prioritization}
+\subsection{Problem Formulation}
+PrefixSpan mining surfaces patterns that drive disproportionate emissions, but not all patterns are equally actionable. A pattern with very high emissions but zero feasible alternatives offers little optimization opportunity. Conversely, a moderately high-emission pattern with low-cost alternatives may yield the best return on investment.
+
+For each pattern $P$ with support $f_P$ and average emissions $\bar{E}_P$, the system considers three intervention types: mode shifts (e.g., truck$\to$rail on a specific leg), rerouting via alternative paths identified by GDS shortest-path algorithms, and supplier switching (substituting one supplier-facility link for another). Each candidate intervention $i$ is characterized by its estimated emission reduction $\Delta E_i$ (kg CO$_2$ per occurrence), implementation cost $c_i$ (dollars or resource units), and potential service-level impact $\Delta T_i$ (duration increase or other SLA degradation).
+
+\subsection{0/1 Knapsack Model}
+Decision variables: $x_i\in\{0,1\}$ for intervention $i$ (1 if selected, 0 otherwise). The optimization problem:
+\begin{align}
+\max\ Z &= \sum_{i=1}^{n} (\Delta E_i \cdot f_{P_i}) \, x_i \quad \text{(total emission reduction)},\\
+\text{s.t.}\quad &\sum_{i=1}^{n} c_i \, x_i \le B \quad \text{(budget constraint)},\\
+&\sum_{i=1}^{n} x_i \le K \quad \text{(max interventions constraint)},\\
+&\Delta T_i \le T^{\max} \quad \forall i \text{ with } x_i=1 \quad \text{(SLA guardrail)}.
+\end{align}
+where $B$ is total budget, $K$ is maximum number of simultaneous interventions, and $T^{\max}$ is maximum acceptable duration increase (e.g., 15\%).
+
+\subsection{Solution Approach}
+The 0/1 knapsack problem is solved via greedy approximation using value-density ranking: interventions are ordered by $\Delta E_i \cdot f_{P_i} / c_i$, which represents total emission reduction (across all pattern occurrences) per dollar spent. For small instances (typically fewer than 50 interventions), exact dynamic programming provides optimal solutions; larger instances use the greedy approximation, which provides near-optimal results when value densities vary widely (a common scenario in practice). The algorithm sequentially adds interventions that fit within budget and SLA constraints, stopping when no remaining intervention satisfies both conditions.
+
+\section{Algorithms}
+\subsection{PrefixSpan Algorithm}
+\begin{algorithm}[H]
+\caption{PrefixSpan for emission pattern mining}
+\begin{algorithmic}[1]
+\Procedure{PrefixSpan}{$\mathcal{D}$, minSupp, maxLen}
+  \State $L_1\gets$ frequent 1-items from $\mathcal{D}$
+  \ForAll{prefix $p\in L_1$}
+    \State project $\mathcal{D}$ on $p$ to get projectedDB
+    \State \Call{MineRecursive}{$p$, projectedDB, minSupp, maxLen}
+  \EndFor
+\EndProcedure
+\Statex
+\Procedure{MineRecursive}{prefix, projectedDB, minSupp, maxLen}
+  \If{$|\text{prefix}| \ge 3$ and prefix is frequent}
+    \State record pattern with support count
+  \EndIf
+  \If{$|\text{prefix}| \ge \text{maxLen}$}
+    \State \textbf{return}
+  \EndIf
+  \State find frequent items in projectedDB
+  \ForAll{frequent item $i$}
+    \State newPrefix $\gets$ prefix $+$ [$i$]
+    \State project projectedDB on $i$ to get newProjectedDB
+    \State \Call{MineRecursive}{newPrefix, newProjectedDB, minSupp, maxLen}
+  \EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{0/1 Knapsack Greedy Approximation}
+\begin{algorithm}[H]
+\caption{Greedy knapsack for intervention selection}
+\begin{algorithmic}[1]
+\Procedure{GreedyKnapsack}{interventions, budget, maxCount, slaThreshold}
+  \State sort interventions by value-density: $\Delta E_i \cdot f_{P_i} / c_i$
+  \State selected $\gets$ []
+  \State totalCost $\gets$ 0
+  \ForAll{intervention $i$ in sorted order}
+    \If{$c_i + \text{totalCost} \le \text{budget}$ and $|\text{selected}| < \text{maxCount}$ and $\Delta T_i \le \text{slaThreshold}$}
+      \State add $i$ to selected
+      \State totalCost $\gets$ totalCost $+$ $c_i$
+    \EndIf
+  \EndFor
+  \State \textbf{return} selected interventions
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\section{Redis Caching Architecture}
+\subsection{Design Rationale}
+Interactive dashboards require sub-second response times, yet Neo4j GDS algorithms, PrefixSpan mining, and shortest-path queries typically take 3--5 seconds on medium-scale organizations (roughly 100 facilities, 500 routes, 10,000 shipments). Recomputing these results for every user interaction would render the dashboard unusable. Redis caching bridges this gap: cache hits return results in under 100 milliseconds, representing a 30--50x speedup that makes real-time exploration feasible.
+
+\subsection{Caching Strategy}
+Cache keys follow namespace pattern: \texttt{\{namespace\}:\{org\_id\}:\{operation\}:\{params\}}. Key namespaces:
+\begin{itemize}
+  \item \texttt{gds}: Graph Data Science results (betweenness, PageRank, communities, shortest paths). TTL: 15 minutes.
+  \item \texttt{prefixspan}: Pattern mining results. TTL: 30 minutes.
+  \item \texttt{dashboard}: Dashboard KPIs and aggregations. TTL: 5--15 minutes.
+  \item \texttt{gee}: Google Earth Engine API responses. TTL: 24 hours (daily), 7 days (weekly), 30 days (monthly).
+  \item \texttt{eo}: EO hotspots and coverage queries. TTL: 15 minutes.
+\end{itemize}
+
+\subsection{Cache Invalidation}
+Caches are invalidated on: (i) data ingestion (new shipments, routes, facilities) via pattern deletion; (ii) KG sync operations (full org cache clear); (iii) TTL expiration. Pattern-based invalidation uses Redis \texttt{SCAN} to match \texttt{\{namespace\}:\{org\_id\}:*} and delete matching keys.
+
+\subsection{Performance Impact}
+Empirical measurements show: GDS analytics (cache hit: $<100$ms vs $3--5$s cold), PrefixSpan (cache hit: $<100$ms vs $2--5$s cold), GEE API (cache hit: $<50$ms vs $30$s cold). Cache hit rates: GDS 60--80\%, PrefixSpan 70--85\%, GEE 70--90\%. Overall database load reduced by 50--70\%.
+
+\section{Complexity Analysis}
+\subsection{Asymptotic considerations}
+Complexity analysis clarifies scalability characteristics. Let $N$ denote the number of sequences, $M$ the number of unique items (facility IDs, transport modes, etc.), and $L$ the maximum sequence length. PrefixSpan's projected-database recursion processes each frequent prefix by projecting the database to only those sequences containing that prefix, then recursively mining the projected subset. 
+
+The typical pass complexity per frequent prefix is $\mathcal{O}(N\,\bar{L})$, where $\bar{L}$ is average sequence length. This appears expensive, but projected databases shrink rapidly: after the first prefix, the projected database typically contains only a fraction of the original sequences, and recursion depth is limited by minimum support thresholds. With minimum support set at 0.5--1\% of $N$, recursion typically reaches 2--5 levels before support thresholds prune further expansion. The exponential shrinking of projected databases means total work grows roughly linearly with $N$ rather than quadratically or worse. Once results are cached, subsequent queries achieve $\mathcal{O}(1)$ lookup time regardless of database size.
+
+\subsection{Streaming regime}
+For append-only event streams arriving at rate $r$ events/s within a sliding window $W$ (events), incremental support updates maintain per-pattern counters in $\mathcal{O}(1)$ amortized time per event for fixed pattern sets. Pattern maintenance under sliding windows requires at most $\mathcal{O}(\log W)$ additional overhead when using time-partitioned buckets to track expiring events. With pattern set size $P$ bounded after pruning via minimum support and maximum pattern length policies, the end-to-end update cost per interval remains $\mathcal{O}(P)$. This remains scalable as long as the pattern set size stays manageable relative to stream volume.
+
+\subsection{Resource envelope}
+Empirically on mid-scale corpora ($N\approx 10^6$, $M\approx 10^3$), a single mining shard sustains $\approx 1\text{--}2\times10^2$ events/s with CPU utilization $<70\%$ and memory $<8$\,GiB for id-lists and caches. Horizontal sharding by tenant and by prefix/equivalence class provides near-linear scaling; shards exchange only aggregate counts.
+
+\section{EO Data Fusion Details}
+\subsection{Noise, clouds, and QA}
+Earth Observation data requires quality filtering before fusion. Sentinel-5P provides quality assessment flags; pixels with QA\_value below 0.75 are excluded. Additionally, high solar zenith angles (low sun elevation), snow/ice coverage, and cloud fractions above 20\% (from FRESCO cloud products) are masked out to avoid contaminated readings. Temporal smoothing applies an exponentially weighted moving average with pollutant-specific decay parameters $\alpha_t$. More aggressive smoothing is used for inherently noisy pollutants like HCHO, while lighter smoothing suffices for stable signals like NO$_2$. Outlier suppression uses median absolute deviation (MAD) filters per area of interest, removing values that deviate by more than 3 MADs from the median. This helps eliminate artifacts from occasional sensor glitches or atmospheric anomalies.
+
+\subsection{Downscaling and spatial alignment}
+Coarse EO grids are downscaled using bilinear interpolation constrained by land/transport masks and, where available, road-network density as a proxy prior. For facility AOIs, inverse-distance weighted aggregates are computed with decay $\alpha_d$; for route segments, sampling occurs along polylines with spacing $d_s$ and integration over buffered corridors.
+
+\subsection{Sensor fusion}
+Ground sensors offer high temporal resolution (often hourly or sub-hourly readings) but limited spatial coverage. Where available, these provide calibration references for EO satellite data, which has better spatial coverage but lower temporal frequency. A bias-correction model is fitted per area of interest using ridge regression to map EO pixel values to ground sensor baselines, accounting for differences in measurement methodology and spatial footprint. Change-point detection algorithms monitor for sensor drift or systematic shifts in the bias relationship (e.g., due to sensor degradation or local changes in land use). The fused signal incorporates both sources: EO provides spatial context, ground sensors provide temporal calibration. This fused signal is then re-normalized to seasonal baselines to account for natural atmospheric variability (e.g., higher NO$_2$ in winter due to heating demands).
+
+\section{Risk and Ethical Considerations}
+\subsection{Privacy and governance}
+Beyond tenant isolation, the system enforces purpose limitation, least-privilege access, and encryption in transit/at rest. For multi-party analytics, privacy-preserving aggregation (e.g., secure sum) and optional federated training are supported for models that touch sensitive attributes.
+
+\subsection{Bias and fairness}
+Models may inherit bias from uneven sensor coverage or EO artifacts. Subgroup performance is monitored across regions, modes, and partners; where disparities arise, reweighting and calibration are applied to mitigate. Recommendations avoid penalizing suppliers based solely on exogenous context signals.
+
+\subsection{Operational risk}
+Prescriptive actions are gated with constraint checks (service, safety, compliance) and human-in-the-loop approval. All changes are logged for audit; rollback plans are required for automated playbooks.
+
+\section{SaaS Dashboard and API}
+Key views: (i) hotspot maps with EO AQI overlays; (ii) graph analytics cards (chokepoints, hubs, communities); (iii) pattern cards with class, support, emission impact; (iv) knapsack optimization recommendations with emission reduction estimates; (v) anomaly feed with peer-normalized scores. APIs expose data ingestion, EO enrichment, graph analytics (GDS), sequence mining, and optimization endpoints for ERP, procurement, and reporting systems. All analytics endpoints are cached via Redis for sub-second responses.
+
+\section{Standards and Compliance}
+The system follows the guidance from WRI/WBCSD GHG Protocol Scope 3 Category 4 (Upstream Transportation and Distribution) and ISO 14083:2023 applicable for quantification and reporting. These boundaries and factors are defined in the standards; the proposed framework provides the technical simulation and analytics.
+
+\section{Results and Evaluation}
+\subsection{Overview of the Dataset}
+The system was tested on a multi-tenant supply chain dataset of a testing organization that consisted of 8 facilities (4 owned, 4 supplier-owned), 5 products, 5 suppliers, 20 routes, and 20 shipment sequences. Facilities are in Mumbai, Delhi, Bangalore, and Chennai in India. The modes of transport were road truck, rail freight, and sea container, and the distances were from 2--1407 km.
+
+\begin{table}[!t]
+\centering
+\caption{Dataset snapshot: Entities and relationships}
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{Entity Type} & \textbf{Count} \\
+\midrule
+Facilities (total) & 8 \\
+\quad Your facilities & 4 \\
+\quad Supplier facilities & 4 \\
+Suppliers & 5 \\
+Products & 5 \\
+Routes & 20 \\
+Shipments & 20 \\
+Purchase Orders & 5 \\
+\bottomrule
+\end{tabular}
+\label{tab:dataset}
+\end{table}
+
+\begin{table}[!t]
+\centering
+\caption{Pipeline stages: Processing times and outputs}
+\small
+\begin{tabular}{@{}lrrl@{}}
+\toprule
+\textbf{Stage} & \textbf{Time (ms)} & \textbf{Output} & \textbf{State} \\
+\midrule
+Data Ingestion & & & \\
+\quad Suppliers & 51.4 & 5 suppliers & Ingested \\
+\quad Facilities & 77.7 & 8 facilities & Ingested \\
+\quad Products & 18.9 & 5 products & Ingested \\
+\quad Purchase Orders & 26.5 & 5 POs & Ingested \\
+\quad Routes & 23.9 & 20 routes & Ingested \\
+\quad Shipments & 68.1 & 20 shipments & Ingested \\
+\midrule
+EO Enrichment & 129.3 & 8 facilities enriched & Enriched \\
+\midrule
+KG Sync & 583.1 & 14 nodes, 21 edges & KG Built \\
+\midrule
+Graph Analytics & & & Ready \\
+\quad Build Graphs & 53.1 & 2 projections & Ready \\
+\quad Betweenness & 11.9 & Top chokepoints & Analyzed \\
+\quad PageRank & 28.7 & Hub rankings & Analyzed \\
+\quad Communities & 434.6 & 2 clusters & Analyzed \\
+\midrule
+PrefixSpan Mining & 10.3 & 5 patterns & Mined \\
+\bottomrule
+\end{tabular}
+\label{tab:pipeline}
+\end{table}
+
+\subsection{Graph Analytics Results}
+Graph methods uncover structural characteristics that marginal statistics cannot. Betweenness Centrality ranked Delhi Distribution Center (F002) as the highest bottleneck with a value of 28.67, which is far greater than the next contender (F001 has 25.67). This means that F002 lies on most shortest paths, and it forms a bottleneck. Multiple routes would be affected at once if F002 were to clog up or fail.
+
+F002's importance was similarly confirmed in PageRank analysis: the node achieved the highest influence score (1.62), followed by F004 (1.23) and F001 (1.16). These facilities serve as hubs for aggregating flows from diverse suppliers and for the consolidation of products. Louvain community detection divided the network into two clusters: a very small 3-facility cluster (F003, F104, F107) and a very large 11-facility cluster consisting of the network's core facilities. This pattern of clustering implies that actions on the big cluster (such as the consolidation of regional rail) would influence most of the network traffic.
+
+\begin{table}[!t]
+\centering
+\caption{Top facilities by Betweenness Centrality (chokepoints)}
+\small
+\begin{tabular}{@{}lrl@{}}
+\toprule
+\textbf{Facility ID} & \textbf{Score} & \textbf{Risk Level} \\
+\midrule
+F002 & 28.67 & High \\
+F001 & 25.67 & High \\
+F003 & 13.00 & Medium \\
+F006 & 6.00 & Medium \\
+F005 & 5.67 & Low \\
+F007 & 5.00 & Low \\
+\bottomrule
+\end{tabular}
+\label{tab:betweenness}
+\end{table}
+
+\begin{table}[!t]
+\centering
+\caption{Top facilities by PageRank (influence hubs)}
+\small
+\begin{tabular}{@{}lrl@{}}
+\toprule
+\textbf{Facility ID} & \textbf{Score} & \textbf{Type} \\
+\midrule
+F002 & 1.62 & Hub \\
+F004 & 1.23 & Hub \\
+F001 & 1.16 & Hub \\
+F007 & 0.74 & Node \\
+F003 & 0.52 & Node \\
+\bottomrule
+\end{tabular}
+\label{tab:pagerank}
+\end{table}
+
+\subsection{Results of PrefixSpan Pattern Mining}
+Pattern mining with minimum support 5 (25\% of sequences) and maximum length 5 tokens found five frequent emission-intensive patterns. The most influential pattern, P1 (F101$\to$ROAD\_TRUCK$\to$F001), generated 220.44 kg CO$_2$ total across 4 occurrences, averaging 55.11 kg CO$_2$ per occurrence. This pattern demonstrates the frequent-offender issue: moderate per-occurrence emissions coupled with high cumulative impact based on frequency.
+
+Pattern P2 (F103$\to$RAIL\_FREIGHT$\to$F001) shows mode contrasts: while P2 has the same support (4 occurrences) as P1, P2 only accounts for 130.85 kg CO$_2$ in total (32.71 kg CO$_2$ per occurrence). The 41\% reduction with respect to P1 indicates that switching F103$\to$F001 from road truck to rail freight may be an efficient way to cut emissions on this leg, if rail capacity and routing constraints allow it.
+
+\begin{table}[!t]
+\centering
+\caption{Top mined patterns by emission impact}
+\footnotesize
+\begin{tabular}{@{}p{2.2cm}@{}p{1.8cm}@{}c@{}r@{}r@{}}
+\toprule
+\textbf{Pattern} & \textbf{Mode} & \textbf{Supp.} & \textbf{Sum} & \textbf{Avg} \\
+&  &  & \textbf{(kg CO$_2$)} & \textbf{(kg CO$_2$)} \\
+\midrule
+F101$\to$F001 & ROAD\_TRUCK & 4 & 220.44 & 55.11 \\
+F103$\to$F001 & RAIL\_FREIGHT & 4 & 130.85 & 32.71 \\
+F102$\to$F004 & SEA\_CONTAINER & 4 & 52.54 & 13.13 \\
+F104$\to$F003 & ROAD\_TRUCK & 4 & 14.51 & 3.63 \\
+F103$\to$F002 & ROAD\_TRUCK & 4 & 3.53 & 0.88 \\
+\bottomrule
+\end{tabular}
+\label{tab:prefixspan}
+\end{table}
+
+\subsection{EO Hotspot Analysis}
+Sharp trajectories of concern emerge among air pollution hotspots according to Air Quality Index (AQI) rankings. Facility F109 has the highest AQI (124.8) with an increasing trend (+16.6 in 3 months), which is classified as ``unhealthy for sensitive groups''. F102 follows with AQI 116.6 but exhibits a more severe upward trend (+36.75) indicating speeding up of deterioration. F002 (Delhi Distribution Center, a graph chokepoint as well) has an AQI of 110.2 with a +17.05 trend. These ascending tendencies, combined with F002's structural centrality, imply that congestion and pollution could be mutually reinforcing. This pattern needs both immediate intervention and strategic infrastructure planning.
+
+\begin{table}[!t]
+\centering
+\caption{Top facilities by AQI (pollution hotspots)}
+\small
+\begin{tabular}{@{}lrlr@{}}
+\toprule
+\textbf{Facility ID} & \textbf{AQI} & \textbf{Trend (3m)} & \textbf{Risk} \\
+\midrule
+F109 & 124.8 & +16.6 & High \\
+F102 & 116.6 & +36.75 & High \\
+F002 & 110.2 & +17.05 & Medium \\
+F003 & 108.0 & +38.2 & Medium \\
+F005 & 106.3 & --8.8 & Medium \\
+\bottomrule
+\end{tabular}
+\label{tab:eo}
+\end{table}
+
+\subsection{Optimization Results}
+Knapsack optimization with a budget of \$10K and a limit of 5 concurrent interventions prioritized two interventions based on value-density ranking. The highest ranked intervention was a mode shift on F101$\to$F001, from road truck to rail freight. This intervention targets pattern P1, the largest emitting pattern identified previously. The emission reduction is estimated to be 40\% (88.18 kg CO$_2$ total) with a delivery duration increase of 8\%, while the cost is around \$2K. The second intervention reroutes F103$\to$F001 via the least emission path discovered by GDS algorithms, reducing by 15\% (19.63 kg CO$_2$) at a cost of \$1.5K with a 5\% increase in delivery duration.
+
+These interventions, when combined, would reduce pattern P1's total emissions by 88.18 kg CO$_2$ (40\%) while using only \$3.5K of the \$10K budget and without causing any more than an acceptable level of deterioration in service (i.e., increases in duration less than 10\%). A third candidate intervention (mode shift on P3) was eliminated due to budget limitations after the first two were selected, despite having a lower value-density ratio.
+
+\begin{table}[!b]
+\centering
+\caption{Knapsack optimization: Selected interventions}
+\footnotesize
+\begin{tabular}{@{}lrrrrl@{}}
+\toprule
+\textbf{Intervention} & \textbf{$\Delta$E} & \textbf{Cost} & \textbf{Value-Density} & \textbf{SLA} & \textbf{Status} \\
+& \textbf{(kg CO$_2$)} & \textbf{(K\$)} & \textbf{($\Delta$E/\$)} & \textbf{($\Delta$T\%)} & \\
+\midrule
+Mode shift P1 & 88.18 & 2.0 & 44.09 & +8\% & Selected \\
+Reroute P2 & 19.63 & 1.5 & 13.09 & +5\% & Selected \\
+Mode shift P3 & 10.51 & 2.5 & 4.20 & +12\% & Budget \\
+\bottomrule
+\end{tabular}
+\label{tab:knapsack}
+\end{table}
+
+\subsection{Performance Benchmark Results}
+Performance results on 11 analytics endpoints show a dual effect of strong caching benefits. Table~\ref{tab:performance} compares cache miss (cold computation) time with cache hit (obtained from Redis) time. The mean speedup is 46.55x, with extremes of 252.27x for route community detection. Cache hit rates also vary by operation: GDS analytics have 60--80\%, PrefixSpan mining 70--85\%, and EO backfill jobs 40--60\% (these are lower because EO data is updated less often). Average cold computation takes 131.91 ms, and cache hits 20.22 ms. This distinction allows interactive dashboards to be developed for environments in which cold computation causes significant latency.
+
+\begin{table}[!t]
+\centering
+\caption{Performance: Cache miss vs cache hit (response times in ms)}
+\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\textbf{Endpoint} & \textbf{Cache Miss} & \textbf{Cache Hit} & \textbf{Speedup} \\
+\midrule
+Facilities Betweenness & 11.91 & 2.37 & 5.03x \\
+Facilities PageRank & 28.74 & 2.49 & 11.56x \\
+Facilities Communities & 434.60 & 2.32 & 187.42x \\
+Routes Betweenness & 22.77 & 2.16 & 10.55x \\
+Routes PageRank & 15.44 & 2.74 & 5.64x \\
+Routes Communities & 658.43 & 2.61 & 252.27x \\
+Shortest Path & 66.00 & 2.59 & 25.47x \\
+EO Hotspots & 20.52 & 17.23 & 1.19x \\
+PrefixSpan Mining & 10.28 & 2.06 & 4.98x \\
+Build Graphs & 53.08 & 7.33 & 7.24x \\
+KG Sync & 583.13 & 104.05 & 5.60x \\
+\midrule
+\textbf{Average} & \textbf{131.91} & \textbf{20.22} & \textbf{46.55x} \\
+\bottomrule
+\end{tabular}
+\label{tab:performance}
+\end{table}
+
+\subsection{Key Findings}
+Several observations were drawn from the assessment. Graph structure analysis identified F002 (Delhi Distribution Center) as a critical chokepoint that appeared in many shortest paths, which emphasizes a single point of failure that needs to be backed up. Pattern mining revealed that road truck patterns (P1, P4, P5) drive disproportionate emissions despite rail alternatives existing for similar routes, indicating potential for mode shifts. Earth Observation validation indicated that AQI pollution hotspots are associated with high PageRank facilities, which suggests that congestion in infrastructure may induce operational and environmental impacts. Cache performance turned out to be the essential factor: the 46.55x average speedup turns computationally expensive analytics (132 ms cold) into sub-second interactions (20 ms cache hit) and enables real-time dashboard exploration. Optimization results showed that mode shift and rerouting strategies are capable of achieving 40\% emission reductions on the highest-impact patterns under the constraints of budget and service levels.
+
+\section{Evaluation Plan}
+System validation dealt with four aspects. First, EO fusion validation used facility AQI snapshots to confirm that pollution measurements are at facilities that are high-traffic hubs identified by PageRank. This indicates that graph centrality measures reflect real operations, not only abstract network structure. Second, pattern mining stability was assessed on 20 shipment sequences, consistently discovering 5 frequent patterns across multiple runs with varying random seeds. Third, optimization feasibility testing confirmed that knapsack selection identifies cost-effective interventions: the algorithm successfully ranked candidates by value-density and selected interventions that maximize emission reduction within budget constraints. Fourth, performance benchmarking measured response times, cache hit rates, and speedup factors, demonstrating that Redis caching provides 46.55x average improvement that makes interactive dashboards practical.
+
+\section{Implementation Notes}
+The reference implementation uses a multi-database architecture. PostgreSQL stores transactional data (facilities, routes, shipments) and Earth Observation snapshots. Neo4j hosts the knowledge graph and provides Graph Data Science algorithms for network analysis. Redis caches both analytics results and Google Earth Engine API responses to reduce latency and external API costs. A separate PrefixSpan service handles sequence mining computations, which can be resource-intensive. The backend is implemented in Python using FastAPI, with multi-tenant isolation enforced via organization-scoped queries (filtering by \texttt{org\_id} on all database operations). A dashboard service sits behind an API gateway that handles authentication and rate limiting.
+
+Security and privacy measures include tenant isolation through org-scoped queries, role-based access control for different user permissions (viewer, analyst, administrator), and data residency compliance to satisfy regional regulations. Graph projections are built on-demand when an organization first requests analytics, then cached to avoid redundant computation. PrefixSpan mining results are cached with a 30-minute time-to-live, balancing freshness with performance.
+
+\section{Limitations and Future Work}
+There are a number of limitations that should be noted. System results are greatly influenced by the quality and availability of data: missing routes, incomplete shipment logs, and inaccurate facility locations all undermine the effectiveness of graph analyses and sequence mining. Global-scale EO downscaling near narrow transport corridors remains computationally too demanding and can generate artifacts. At such large scales (millions of shipments, thousands of facilities), full re-mining is no longer feasible, motivating incremental or approximate methods.
+
+Future work includes designing incremental miners which can process streaming shipment logs without need for full re-computation, adaptive support thresholds that adjust based on data volume and pattern distribution, incorporation of additional EO sources (other than Sentinel-5P) to provide higher spatial resolution, and automated generation of mitigation playbooks that map pattern classifications to specific courses of action. In particular, extending the framework to support multi-objective optimization of objectives other than emissions (e.g., cost, reliability, social impact) would enable the provision of enriched decision support.
+
+Several new directions are opening up that provide promising extensions to the current architecture. Deep learning methods may enhance pattern discovery by capturing non-linear correlations in sequence data that mining algorithms based on rules could overlook. Graph neural networks (GNNs) learned over the knowledge graph structure can potentially discover emission-intensive patterns via learned embeddings, complementing prefix-based sequence mining with learned representations that may capture intricate temporal and spatial interactions. Likewise, neural optimization architectures may supplant (or complement) classical knapsack solvers by learning cost functions and constraint dependencies from historical intervention effects, thus enabling more expressive modeling of trade-offs in high-dimensional decision spaces.
+
+Generative AI features enable new types of advanced simulation models. Large language models may be able to produce plausible narratives of scenarios that can be used to translate optimization advice into business-ready action plans given organizational context, regulatory constraints and stakeholder concerns. Foundation models that have been further fine-tuned on supply chain expertise have the potential to aid in the creation of realistic what-if scenarios by combining historical trends, external market influences, and operational limitations into actionable simulation parameters. Such models could also assist in better interpretation of complex analytical outputs, such as translating graph centrality scores, pattern classifications, and optimization rankings into natural language insights that are decision-relevant and actionable.
+
+The combination of generative AI and analytics-based decision support may provide for a new way for organizations to work with emission optimization solutions. Instead of showing raw forms of metrics and recommendations, interfaces of the future could deliver conversational analytics that assist users to investigate trade-offs, identify root causes and assess intervention options in a natural dialogue. Interpretations with the support of AI may reveal implicit connections between the graph structure, emission trends, and business implications that allow stakeholders to pose follow-up questions, investigate different what-if scenarios, and obtain contextualized recommendations that are customized to unique priorities and limitations of their organization.
+
+\section{Conclusion}
+This work shows that the integration of Earth Observation (EO) data enrichment, knowledge graph analytics, sequence mining and constraint-based optimization can yield insights that isolated tools do not uncover. Graph algorithms reveal structural weaknesses: which nodes of the graph foreshadow single points of failure, and which routes act as critical corridors. Sequence mining identifies repeating patterns that accumulate effects even though they look harmless when taken as isolated events. Knapsack optimization then prioritizes interventions by their capability to reduce emissions subject to realistic constraints. Together these ingredients are what deliver to service providers fine-grained, actionable advisories: ``turn on this mode on this route, reroute via this alternate path, incentivize these suppliers to remove that sequence''.
+
+The use of EO data provides spatial-temporal dimension, thereby allowing validation of facility-level emissions against satellite observations. Redis caching enables these compute-intensive analyses to be viable for interactive dashboards, bringing a 30 to 50 times speedup that makes real-time drill down possible. With supply chain decarbonization increasing in priority, systems that link monitoring to prescriptive action as opposed to reporting will be critical. The framework developed here is a step towards bridging this gap.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
