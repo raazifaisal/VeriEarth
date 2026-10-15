@@ -1,0 +1,24 @@
+{
+ "bbox": [
+  100.985,
+  13.385,
+  101.075,
+  13.465
+ ],
+ "threshold_db": 3.0,
+ "stats": {
+  "asc:20260915->20260927": {
+   "brightened_gt3db": 0.102,
+   "darkened_gt3db": 0.018
+  },
+  "asc:20260915->20261009": {
+   "brightened_gt3db": 0.023,
+   "darkened_gt3db": 0.051
+  },
+  "desc:20260919->20261001": {
+   "brightened_gt3db": 0.017,
+   "darkened_gt3db": 0.039
+  }
+ },
+ "source": "Sentinel-1 RTC (Microsoft Planetary Computer), VV, 5x5 boxcar, change vs same-orbit reference"
+}

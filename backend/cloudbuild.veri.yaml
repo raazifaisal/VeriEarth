@@ -1,0 +1,5 @@
+# Build the VeriEarth API image with Dockerfile.veri.
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "Dockerfile.veri", "-t", "${_IMAGE}", "."]
+images: ["${_IMAGE}"]

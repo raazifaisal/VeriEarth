@@ -4,3 +4,8 @@ __pycache__/
 venv/
 veriearth-468117-4511ba47997e.json
 *.json
+.venv-veri/
+
+# VeriEarth engine data must be committed
+!veri/data/*.json
+!veri/data/hazard_cache/*.json

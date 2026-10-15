@@ -1,0 +1,11 @@
+.venv-veri/
+.venv*/
+venv/
+__pycache__/
+*.pyc
+academia/
+test_data/
+test_data_small/
+docs/
+.env
+*.json.bak

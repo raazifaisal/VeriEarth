@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>Sample delivery note</title>
+<style>
+  body { margin: 0; background: #e9e6df; font-family: "Tahoma", "Leelawadee UI", sans-serif; }
+  .page { width: 760px; margin: 24px auto; background: #fff; padding: 36px 44px; box-shadow: 0 2px 10px rgba(0,0,0,.15); transform: rotate(-0.6deg); }
+  h1 { font-size: 22px; margin: 0; }
+  .co { font-size: 13px; color: #333; line-height: 1.5; }
+  .row { display: flex; justify-content: space-between; margin-top: 18px; font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 14px; }
+  th, td { border: 1px solid #555; padding: 6px 8px; text-align: left; }
+  th { background: #f1f1f1; }
+  .right { text-align: right; }
+  .sig { display: flex; justify-content: space-between; margin-top: 48px; font-size: 13px; }
+  .stamp { color: #1d3fa0; border: 2px solid #1d3fa0; border-radius: 50%; width: 110px; height: 110px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 11px; transform: rotate(-12deg); }
+  .note { margin-top: 26px; font-size: 10px; color: #888; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="row" style="margin-top:0">
+    <div>
+      <h1>ใบส่งสินค้า / DELIVERY NOTE</h1>
+      <div class="co">
+        บริษัท อีสเทิร์น เรซิน คอมพาวด์ จำกัด<br>
+        นิคมอุตสาหกรรมอมตะซิตี้ ชลบุรี (เขต 8) ต.ดอนหัวฬ่อ อ.เมืองชลบุรี จ.ชลบุรี 20000
+      </div>
+    </div>
+    <div class="co right">
+      เลขที่ <b>DN-2569-09-0412</b><br>
+      วันที่ <b>21 กันยายน 2569</b>
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <b>ผู้รับสินค้า</b><br>
+      บริษัท สยาม อินทีเรียร์ คอมโพเนนท์ส จำกัด (โรงงาน 1)<br>
+      นิคมอุตสาหกรรมดับบลิวเอชเอ ชลบุรี 1 อ.ศรีราชา จ.ชลบุรี
+    </div>
+    <div class="right">
+      <b>การขนส่ง</b><br>
+      รถบรรทุก 10 ล้อ ทะเบียน 70-1234 ชลบุรี<br>
+      ใบสั่งซื้อ PO-SIC-24871
+    </div>
+  </div>
+
+  <table>
+    <tr><th>ลำดับ</th><th>รายการสินค้า</th><th class="right">จำนวน</th><th>หน่วย</th><th class="right">น้ำหนัก (กก.)</th></tr>
+    <tr><td>1</td><td>เม็ดพลาสติก PP คอมพาวด์ เกรด TD20 (สีดำ)</td><td class="right">720</td><td>ถุง (25 กก.)</td><td class="right">18,000</td></tr>
+    <tr><td>2</td><td>เม็ดพลาสติก PP คอมพาวด์ เกรด TD20 (สีเทา)</td><td class="right">240</td><td>ถุง (25 กก.)</td><td class="right">6,000</td></tr>
+    <tr><td>3</td><td>พาเลทไม้</td><td class="right">24</td><td>ชิ้น</td><td class="right">480</td></tr>
+    <tr><td colspan="4" class="right"><b>น้ำหนักรวม</b></td><td class="right"><b>24,480</b></td></tr>
+  </table>
+
+  <div class="sig">
+    <div>ผู้ส่งสินค้า ..............................</div>
+    <div class="stamp">อีสเทิร์น<br>เรซิน คอมพาวด์<br>ได้รับแล้ว</div>
+    <div>ผู้รับสินค้า ..............................</div>
+  </div>
+  <div class="note">Sample document for the VeriEarth demo. Companies are illustrative.</div>
+</div>
+</body>
+</html>

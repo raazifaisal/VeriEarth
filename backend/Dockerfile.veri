@@ -1,0 +1,17 @@
+# VeriEarth API (criticality engine + Gemini agents) for Cloud Run.
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PORT=8080
+WORKDIR /app
+
+COPY requirements-veri.txt .
+RUN pip install --no-cache-dir -r requirements-veri.txt
+
+# Engine, agents and the cached hazard snapshots (the demo needs no outbound weather calls).
+COPY veri/ veri/
+COPY veri_app.py .
+
+RUN useradd --create-home app && chown -R app:app /app
+USER app
+
+CMD exec uvicorn veri_app:app --host 0.0.0.0 --port ${PORT} --workers 1

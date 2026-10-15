@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  background: #f3f0e8;
+  color: #10201f;
+}
+
+.eyebrow {
+  @apply font-mono text-[11px] uppercase tracking-[0.18em] text-hazard-dark;
+}
+
+.card {
+  @apply rounded-xl border border-paper-line bg-paper-2;
+}
+
+.leaflet-container {
+  background: #e8e4d8;
+  font-family: var(--font-sans), Arial, sans-serif;
+}
+
+.leaflet-tooltip.veri-tip {
+  border-radius: 8px;
+  border: 1px solid #d9d3c4;
+  box-shadow: 0 4px 16px rgba(16, 32, 31, 0.12);
+  padding: 6px 10px;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.6); opacity: 0.8; }
+  100% { transform: scale(2.2); opacity: 0; }
+}

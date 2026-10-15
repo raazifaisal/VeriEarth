@@ -1,0 +1,629 @@
+{
+  "meta": {
+    "name": "Siam Interior Components: illustrative tier-1 network, Eastern Seaboard, Thailand",
+    "illustrative": true,
+    "notes": [
+      "The focal company, supplier names, parts, inventory levels, prices and orders are illustrative.",
+      "Industrial-estate and OEM plant locations are real places; coordinates are approximate (estate-level, not building-level).",
+      "Supplier zone notes for Amata City Chonburi reflect the zones reported flooded in Sept 2026 (zones 7-9), used for the hindcast narrative."
+    ],
+    "currency": "THB",
+    "horizon_days": 28
+  },
+  "company": {
+    "id": "SIC",
+    "name": "Siam Interior Components",
+    "tier": 1
+  },
+  "sites": [
+    {
+      "id": "SIC-P1",
+      "name": "SIC Plant 1 (door trims, consoles)",
+      "kind": "own_plant",
+      "estate": "WHA Chonburi Industrial Estate 1",
+      "lat": 13.04,
+      "lon": 101.06
+    },
+    {
+      "id": "SIC-P2",
+      "name": "SIC Plant 2 (instrument panels)",
+      "kind": "own_plant",
+      "estate": "Amata City Rayong",
+      "lat": 13.025,
+      "lon": 101.115
+    },
+    {
+      "id": "S-RESIN",
+      "name": "Eastern Resin Compounds",
+      "kind": "supplier",
+      "tier": 2,
+      "estate": "Amata City Chonburi (zone 8)",
+      "lat": 13.425,
+      "lon": 101.03,
+      "category": "PP compound"
+    },
+    {
+      "id": "S-FOAM",
+      "name": "Chon Foam Industries",
+      "kind": "supplier",
+      "tier": 2,
+      "estate": "Amata City Chonburi (zone 7)",
+      "lat": 13.415,
+      "lon": 101.015,
+      "category": "PU foam"
+    },
+    {
+      "id": "S-PAINT",
+      "name": "Amata Coatings",
+      "kind": "supplier",
+      "tier": 2,
+      "estate": "Amata City Chonburi (zone 9)",
+      "lat": 13.432,
+      "lon": 101.022,
+      "category": "Paint and coatings"
+    },
+    {
+      "id": "S-FAST",
+      "name": "Bangpoo Fastener Works",
+      "kind": "supplier",
+      "tier": 2,
+      "estate": "Bangpoo Industrial Estate",
+      "lat": 13.52,
+      "lon": 100.66,
+      "category": "Clips and fasteners"
+    },
+    {
+      "id": "S-SWITCH",
+      "name": "Ayutthaya Switch Modules",
+      "kind": "supplier",
+      "tier": 2,
+      "estate": "Hi-Tech Industrial Estate, Ayutthaya",
+      "lat": 14.25,
+      "lon": 100.59,
+      "category": "Switch modules"
+    },
+    {
+      "id": "S-FABRIC",
+      "name": "Navanakorn Textiles",
+      "kind": "supplier",
+      "tier": 2,
+      "estate": "Navanakorn Industrial Estate",
+      "lat": 14.11,
+      "lon": 100.62,
+      "category": "Trim fabric"
+    },
+    {
+      "id": "S-STAMP",
+      "name": "Pinthong Stamping",
+      "kind": "supplier",
+      "tier": 2,
+      "estate": "Pinthong Industrial Estate",
+      "lat": 13.155,
+      "lon": 101.035,
+      "category": "Steel brackets"
+    },
+    {
+      "id": "S-HARN",
+      "name": "Laem Chabang Harness",
+      "kind": "supplier",
+      "tier": 2,
+      "estate": "Laem Chabang Industrial Estate",
+      "lat": 13.09,
+      "lon": 100.92,
+      "category": "Wire harness"
+    },
+    {
+      "id": "A-RESIN-MTP",
+      "name": "Map Ta Phut Polymer (qualified alternate)",
+      "kind": "supplier",
+      "tier": 2,
+      "estate": "Map Ta Phut, Rayong",
+      "lat": 12.69,
+      "lon": 101.15,
+      "category": "PP compound",
+      "alternate": true
+    },
+    {
+      "id": "A-RESIN-PEN",
+      "name": "Penang Polymer (qualified alternate)",
+      "kind": "supplier",
+      "tier": 2,
+      "estate": "Penang, Malaysia",
+      "lat": 5.35,
+      "lon": 100.3,
+      "category": "PP compound",
+      "alternate": true,
+      "overseas": true
+    },
+    {
+      "id": "A-FAST-RYG",
+      "name": "Rayong Fasteners (qualified alternate)",
+      "kind": "supplier",
+      "tier": 2,
+      "estate": "Amata City Rayong",
+      "lat": 13.03,
+      "lon": 101.11,
+      "category": "Clips and fasteners",
+      "alternate": true
+    },
+    {
+      "id": "A-FOAM-RYG",
+      "name": "Rayong Foam Tech (qualified alternate)",
+      "kind": "supplier",
+      "tier": 2,
+      "estate": "Amata City Rayong",
+      "lat": 13.02,
+      "lon": 101.12,
+      "category": "PU foam",
+      "alternate": true
+    },
+    {
+      "id": "A-SWITCH-PEN",
+      "name": "Penang Electronics (qualified alternate)",
+      "kind": "supplier",
+      "tier": 2,
+      "estate": "Penang, Malaysia",
+      "lat": 5.3,
+      "lon": 100.28,
+      "category": "Switch modules",
+      "alternate": true,
+      "overseas": true
+    },
+    {
+      "id": "A-FABRIC-BD",
+      "name": "Binh Duong Textiles (qualified alternate)",
+      "kind": "supplier",
+      "tier": 2,
+      "estate": "Binh Duong, Vietnam",
+      "lat": 10.98,
+      "lon": 106.65,
+      "category": "Trim fabric",
+      "alternate": true,
+      "overseas": true
+    },
+    {
+      "id": "C-TMT-BANPHO",
+      "name": "Toyota Ban Pho",
+      "kind": "customer",
+      "estate": "Ban Pho, Chachoengsao",
+      "lat": 13.6,
+      "lon": 101.08
+    },
+    {
+      "id": "C-TMT-GATEWAY",
+      "name": "Toyota Gateway",
+      "kind": "customer",
+      "estate": "Gateway City, Chachoengsao",
+      "lat": 13.62,
+      "lon": 101.29
+    },
+    {
+      "id": "C-TMT-SAMRONG",
+      "name": "Toyota Samrong",
+      "kind": "customer",
+      "estate": "Samrong, Samut Prakan",
+      "lat": 13.645,
+      "lon": 100.605
+    },
+    {
+      "id": "C-HONDA-AYT",
+      "name": "Honda Ayutthaya",
+      "kind": "customer",
+      "estate": "Rojana Industrial Park, Ayutthaya",
+      "lat": 14.32,
+      "lon": 100.64
+    },
+    {
+      "id": "X-LCB-PORT",
+      "name": "Laem Chabang Port",
+      "kind": "port",
+      "lat": 13.08,
+      "lon": 100.88
+    },
+    {
+      "id": "X-BKK-AIR",
+      "name": "Suvarnabhumi Airport (cargo)",
+      "kind": "airport",
+      "lat": 13.69,
+      "lon": 100.75
+    }
+  ],
+  "parts": [
+    {
+      "id": "PP-COMP",
+      "name": "PP compound",
+      "unit": "kg",
+      "unit_cost_thb": 62,
+      "unit_weight_kg": 1.0
+    },
+    {
+      "id": "PU-FOAM",
+      "name": "PU foam pad",
+      "unit": "kg",
+      "unit_cost_thb": 95,
+      "unit_weight_kg": 1.0
+    },
+    {
+      "id": "PAINT",
+      "name": "Coating",
+      "unit": "kg",
+      "unit_cost_thb": 180,
+      "unit_weight_kg": 1.0
+    },
+    {
+      "id": "FASTENER",
+      "name": "Clip / fastener",
+      "unit": "pc",
+      "unit_cost_thb": 1.8,
+      "unit_weight_kg": 0.004
+    },
+    {
+      "id": "SWITCH",
+      "name": "Window switch module",
+      "unit": "pc",
+      "unit_cost_thb": 210,
+      "unit_weight_kg": 0.12
+    },
+    {
+      "id": "FABRIC",
+      "name": "Trim fabric",
+      "unit": "m2",
+      "unit_cost_thb": 140,
+      "unit_weight_kg": 0.35
+    },
+    {
+      "id": "BRACKET",
+      "name": "Steel bracket",
+      "unit": "pc",
+      "unit_cost_thb": 24,
+      "unit_weight_kg": 0.25
+    },
+    {
+      "id": "HARNESS",
+      "name": "IP wire harness",
+      "unit": "pc",
+      "unit_cost_thb": 640,
+      "unit_weight_kg": 1.6
+    }
+  ],
+  "products": [
+    {
+      "id": "DOOR-TRIM",
+      "name": "Door trim assembly (pickup)",
+      "plant": "SIC-P1",
+      "daily_rate": 1400,
+      "unit_price_thb": 2450,
+      "bom": [
+        {
+          "part": "PP-COMP",
+          "qty": 2.0
+        },
+        {
+          "part": "PU-FOAM",
+          "qty": 0.5
+        },
+        {
+          "part": "FASTENER",
+          "qty": 12
+        },
+        {
+          "part": "FABRIC",
+          "qty": 0.3
+        },
+        {
+          "part": "PAINT",
+          "qty": 0.1
+        },
+        {
+          "part": "SWITCH",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "id": "CONSOLE",
+      "name": "Centre console (compact sedan)",
+      "plant": "SIC-P1",
+      "daily_rate": 600,
+      "unit_price_thb": 1850,
+      "bom": [
+        {
+          "part": "PP-COMP",
+          "qty": 1.5
+        },
+        {
+          "part": "FASTENER",
+          "qty": 8
+        },
+        {
+          "part": "SWITCH",
+          "qty": 1
+        },
+        {
+          "part": "PAINT",
+          "qty": 0.1
+        }
+      ]
+    },
+    {
+      "id": "IP-PANEL",
+      "name": "Instrument panel (SUV)",
+      "plant": "SIC-P2",
+      "daily_rate": 500,
+      "unit_price_thb": 6900,
+      "bom": [
+        {
+          "part": "PP-COMP",
+          "qty": 4.5
+        },
+        {
+          "part": "BRACKET",
+          "qty": 6
+        },
+        {
+          "part": "HARNESS",
+          "qty": 1
+        },
+        {
+          "part": "FASTENER",
+          "qty": 20
+        },
+        {
+          "part": "PAINT",
+          "qty": 0.2
+        }
+      ]
+    }
+  ],
+  "supplies": [
+    {
+      "supplier": "S-RESIN",
+      "part": "PP-COMP",
+      "plant": "SIC-P1",
+      "share": 1.0,
+      "inventory_days": 4,
+      "alternates": [
+        "A-RESIN-MTP",
+        "A-RESIN-PEN"
+      ]
+    },
+    {
+      "supplier": "S-RESIN",
+      "part": "PP-COMP",
+      "plant": "SIC-P2",
+      "share": 1.0,
+      "inventory_days": 5,
+      "alternates": [
+        "A-RESIN-MTP",
+        "A-RESIN-PEN"
+      ]
+    },
+    {
+      "supplier": "S-FOAM",
+      "part": "PU-FOAM",
+      "plant": "SIC-P1",
+      "share": 1.0,
+      "inventory_days": 3,
+      "alternates": [
+        "A-FOAM-RYG"
+      ]
+    },
+    {
+      "supplier": "S-PAINT",
+      "part": "PAINT",
+      "plant": "SIC-P1",
+      "share": 1.0,
+      "inventory_days": 9,
+      "alternates": []
+    },
+    {
+      "supplier": "S-PAINT",
+      "part": "PAINT",
+      "plant": "SIC-P2",
+      "share": 1.0,
+      "inventory_days": 9,
+      "alternates": []
+    },
+    {
+      "supplier": "S-FAST",
+      "part": "FASTENER",
+      "plant": "SIC-P1",
+      "share": 1.0,
+      "inventory_days": 12,
+      "alternates": [
+        "A-FAST-RYG"
+      ]
+    },
+    {
+      "supplier": "S-FAST",
+      "part": "FASTENER",
+      "plant": "SIC-P2",
+      "share": 1.0,
+      "inventory_days": 12,
+      "alternates": [
+        "A-FAST-RYG"
+      ]
+    },
+    {
+      "supplier": "S-SWITCH",
+      "part": "SWITCH",
+      "plant": "SIC-P1",
+      "share": 1.0,
+      "inventory_days": 7,
+      "alternates": [
+        "A-SWITCH-PEN"
+      ]
+    },
+    {
+      "supplier": "S-FABRIC",
+      "part": "FABRIC",
+      "plant": "SIC-P1",
+      "share": 1.0,
+      "inventory_days": 6,
+      "alternates": [
+        "A-FABRIC-BD"
+      ]
+    },
+    {
+      "supplier": "S-STAMP",
+      "part": "BRACKET",
+      "plant": "SIC-P2",
+      "share": 1.0,
+      "inventory_days": 4,
+      "alternates": []
+    },
+    {
+      "supplier": "S-HARN",
+      "part": "HARNESS",
+      "plant": "SIC-P2",
+      "share": 1.0,
+      "inventory_days": 5,
+      "alternates": []
+    }
+  ],
+  "alternate_terms": [
+    {
+      "supplier": "A-RESIN-MTP",
+      "part": "PP-COMP",
+      "max_share_of_demand": 0.4,
+      "lead_days": 2,
+      "price_premium": 0.08,
+      "mode": "road_truck"
+    },
+    {
+      "supplier": "A-RESIN-PEN",
+      "part": "PP-COMP",
+      "max_share_of_demand": 1.0,
+      "lead_days": 2,
+      "price_premium": 0.15,
+      "mode": "air_cargo",
+      "via": "X-BKK-AIR"
+    },
+    {
+      "supplier": "A-RESIN-PEN",
+      "part": "PP-COMP",
+      "max_share_of_demand": 1.0,
+      "lead_days": 9,
+      "price_premium": 0.1,
+      "mode": "sea_container",
+      "via": "X-LCB-PORT"
+    },
+    {
+      "supplier": "A-FAST-RYG",
+      "part": "FASTENER",
+      "max_share_of_demand": 0.6,
+      "lead_days": 1,
+      "price_premium": 0.05,
+      "mode": "road_truck"
+    },
+    {
+      "supplier": "A-FOAM-RYG",
+      "part": "PU-FOAM",
+      "max_share_of_demand": 0.5,
+      "lead_days": 2,
+      "price_premium": 0.12,
+      "mode": "road_truck"
+    },
+    {
+      "supplier": "A-SWITCH-PEN",
+      "part": "SWITCH",
+      "max_share_of_demand": 1.0,
+      "lead_days": 2,
+      "price_premium": 0.1,
+      "mode": "air_cargo",
+      "via": "X-BKK-AIR"
+    },
+    {
+      "supplier": "A-SWITCH-PEN",
+      "part": "SWITCH",
+      "max_share_of_demand": 1.0,
+      "lead_days": 9,
+      "price_premium": 0.06,
+      "mode": "sea_container",
+      "via": "X-LCB-PORT"
+    },
+    {
+      "supplier": "A-FABRIC-BD",
+      "part": "FABRIC",
+      "max_share_of_demand": 0.8,
+      "lead_days": 2,
+      "price_premium": 0.15,
+      "mode": "air_cargo",
+      "via": "X-BKK-AIR"
+    },
+    {
+      "supplier": "A-FABRIC-BD",
+      "part": "FABRIC",
+      "max_share_of_demand": 0.8,
+      "lead_days": 6,
+      "price_premium": 0.08,
+      "mode": "sea_container",
+      "via": "X-LCB-PORT"
+    }
+  ],
+  "orders": [
+    {
+      "id": "PO-TMT-BP-01",
+      "customer": "C-TMT-BANPHO",
+      "product": "DOOR-TRIM",
+      "qty": 8400,
+      "due_offset_days": 7
+    },
+    {
+      "id": "PO-TMT-BP-02",
+      "customer": "C-TMT-BANPHO",
+      "product": "DOOR-TRIM",
+      "qty": 8400,
+      "due_offset_days": 14
+    },
+    {
+      "id": "PO-TMT-SR-01",
+      "customer": "C-TMT-SAMRONG",
+      "product": "DOOR-TRIM",
+      "qty": 5600,
+      "due_offset_days": 10
+    },
+    {
+      "id": "PO-TMT-SR-02",
+      "customer": "C-TMT-SAMRONG",
+      "product": "DOOR-TRIM",
+      "qty": 5600,
+      "due_offset_days": 21
+    },
+    {
+      "id": "PO-HON-AY-01",
+      "customer": "C-HONDA-AYT",
+      "product": "CONSOLE",
+      "qty": 4200,
+      "due_offset_days": 7
+    },
+    {
+      "id": "PO-HON-AY-02",
+      "customer": "C-HONDA-AYT",
+      "product": "CONSOLE",
+      "qty": 4200,
+      "due_offset_days": 14
+    },
+    {
+      "id": "PO-TMT-GW-01",
+      "customer": "C-TMT-GATEWAY",
+      "product": "IP-PANEL",
+      "qty": 3500,
+      "due_offset_days": 7
+    },
+    {
+      "id": "PO-TMT-GW-02",
+      "customer": "C-TMT-GATEWAY",
+      "product": "IP-PANEL",
+      "qty": 3500,
+      "due_offset_days": 14
+    },
+    {
+      "id": "PO-TMT-GW-03",
+      "customer": "C-TMT-GATEWAY",
+      "product": "IP-PANEL",
+      "qty": 3500,
+      "due_offset_days": 21
+    }
+  ]
+}
